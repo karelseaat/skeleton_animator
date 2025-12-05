@@ -1,0 +1,120 @@
+# Robot Arm Configuration
+
+[meta]
+duration = 3.0
+loop = true
+
+# --- Structure ---
+
+[[bones]]
+name = "Base"
+image = "assets/robot_base.png"
+x = 640
+y = 600
+pivot_x = 40
+pivot_y = 20
+rotation = 0
+
+[[bones]]
+name = "Joint1"
+parent = "Base"
+image = "assets/robot_joint.png"
+x = 0
+y = -10
+pivot_x = 20
+pivot_y = 20
+rotation = 0
+
+[[bones]]
+name = "Arm1"
+parent = "Joint1"
+image = "assets/robot_arm_segment.png"
+x = -15
+y = -100
+pivot_x = 15
+pivot_y = 110 # Pivot at bottom
+rotation = -45
+
+[[bones]]
+name = "Joint2"
+parent = "Arm1"
+image = "assets/robot_joint.png"
+x = 15
+y = 0
+pivot_x = 20
+pivot_y = 20
+rotation = 0
+
+[[bones]]
+name = "Arm2"
+parent = "Joint2"
+image = "assets/robot_arm_segment.png"
+x = -15
+y = -100
+pivot_x = 15
+pivot_y = 110 # Pivot at bottom
+rotation = 90
+
+[[bones]]
+name = "Claw_Top"
+parent = "Arm2"
+image = "assets/robot_claw.png"
+x = 10
+y = 0
+pivot_x = 0
+pivot_y = 60
+rotation = -30
+scale_y = 0.5
+
+[[bones]]
+name = "Claw_Bottom"
+parent = "Arm2"
+image = "assets/robot_claw.png"
+x = 10
+y = 20
+pivot_x = 0
+pivot_y = 0
+rotation = 30
+scale_y = -0.5 # Flip vertically
+
+# --- Animation ---
+
+[[animations.keyframes]]
+time = 0.0
+    [animations.keyframes.bones.Arm1]
+    rotation = -45
+    [animations.keyframes.bones.Arm2]
+    rotation = 90
+    [animations.keyframes.bones.Claw_Top]
+    rotation = -30
+    [animations.keyframes.bones.Claw_Bottom]
+    rotation = 30
+
+[[animations.keyframes]]
+time = 1.5 # Reach out
+    [animations.keyframes.bones.Arm1]
+    rotation = 10
+    [animations.keyframes.bones.Arm2]
+    rotation = 45
+    [animations.keyframes.bones.Claw_Top]
+    rotation = -60 # Open
+    [animations.keyframes.bones.Claw_Bottom]
+    rotation = 60
+
+[[animations.keyframes]]
+time = 2.0 # Grab
+    [animations.keyframes.bones.Claw_Top]
+    rotation = -10 # Close
+    [animations.keyframes.bones.Claw_Bottom]
+    rotation = 10
+
+[[animations.keyframes]]
+time = 3.0 # Return
+    [animations.keyframes.bones.Arm1]
+    rotation = -45
+    [animations.keyframes.bones.Arm2]
+    rotation = 90
+    [animations.keyframes.bones.Claw_Top]
+    rotation = -10
+    [animations.keyframes.bones.Claw_Bottom]
+    rotation = 10

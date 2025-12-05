@@ -1,0 +1,126 @@
+# Skeleton Configuration
+
+[meta]
+duration = 2.0
+loop = true
+
+# -----------------------------------------------------------------------------
+# Bone Definitions
+# -----------------------------------------------------------------------------
+
+[[bones]]
+name = "Body"
+image = "assets/torso.png"
+x = 640
+y = 360
+pivot_x = 25
+pivot_y = 50
+rotation = 0
+
+[[bones]]
+name = "Head"
+parent = "Body"
+image = "assets/head.png"
+x = 0
+y = -60
+pivot_x = 20
+pivot_y = 35  # Pivot at bottom of head (neck)
+rotation = 0
+
+[[bones]]
+name = "Arm_L"
+parent = "Body"
+image = "assets/limb.png"
+x = -30
+y = -40
+pivot_x = 10
+pivot_y = 10  # Pivot at top (shoulder)
+rotation = 20
+
+[[bones]]
+name = "Arm_R"
+parent = "Body"
+image = "assets/limb.png"
+x = 30
+y = -40
+pivot_x = 10
+pivot_y = 10
+rotation = -20
+
+[[bones]]
+name = "Leg_L"
+parent = "Body"
+image = "assets/limb.png"
+x = -15
+y = 50
+pivot_x = 10
+pivot_y = 10
+rotation = 0
+
+[[bones]]
+name = "Leg_R"
+parent = "Body"
+image = "assets/limb.png"
+x = 15
+y = 50
+pivot_x = 10
+pivot_y = 10
+rotation = 0
+
+# -----------------------------------------------------------------------------
+# Animations
+# -----------------------------------------------------------------------------
+
+# Frame 1: Neutral
+[[animations.keyframes]]
+time = 0.0
+
+    [animations.keyframes.bones.Arm_L]
+    rotation = 45
+    
+    [animations.keyframes.bones.Arm_R]
+    rotation = -45
+    
+    [animations.keyframes.bones.Leg_L]
+    rotation = -20
+
+    [animations.keyframes.bones.Leg_R]
+    rotation = 20
+
+# Frame 2: Step
+[[animations.keyframes]]
+time = 1.0
+
+    [animations.keyframes.bones.Body]
+    y = 350 # Bob up
+
+    [animations.keyframes.bones.Arm_L]
+    rotation = -45
+    
+    [animations.keyframes.bones.Arm_R]
+    rotation = 45
+    
+    [animations.keyframes.bones.Leg_L]
+    rotation = 20
+
+    [animations.keyframes.bones.Leg_R]
+    rotation = -20
+
+# Frame 3: Loop back
+[[animations.keyframes]]
+time = 2.0
+
+    [animations.keyframes.bones.Body]
+    y = 360
+
+    [animations.keyframes.bones.Arm_L]
+    rotation = 45
+    
+    [animations.keyframes.bones.Arm_R]
+    rotation = -45
+    
+    [animations.keyframes.bones.Leg_L]
+    rotation = -20
+
+    [animations.keyframes.bones.Leg_R]
+    rotation = 20
