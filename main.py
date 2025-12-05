@@ -4,6 +4,8 @@ import sys
 import json
 import os
 import toml
+import imageio
+import numpy as np
 from tkinter import filedialog, Tk
 
 # Initialize Tkinter for file dialogs (hide the main window)
@@ -124,7 +126,7 @@ class Bone:
             
             surface.blit(rotated_img, rect.topleft)
             
-            if selected:
+            if selected and draw_bones:
                 pygame.draw.rect(surface, SELECTED_COLOR, rect, 1)
 
         # Draw Bone Structure (Visual debug lines)
@@ -393,6 +395,114 @@ def save_scene_to_toml(filepath, root_bone, animation):
     except Exception as e:
         print(f"Error saving TOML: {e}")
 
+def render_scene(surface, root_bone, camera_pan, selected_bone, mode, time_info=None, draw_bones=True):
+    """
+    Draws the entire scene to the provided surface.
+    time_info: tuple (current_time, duration) for drawing timeline
+    """
+    surface.fill(BG_COLOR)
+    
+    # Grid
+    grid_sz = 50
+    off_x = camera_pan[0] % grid_sz
+    off_y = camera_pan[1] % grid_sz
+    w, h = surface.get_size()
+    
+    for i in range(0, w, grid_sz):
+        pygame.draw.line(surface, GRID_COLOR, (i + off_x - grid_sz, 0), (i + off_x - grid_sz, h - TIMELINE_HEIGHT))
+    for i in range(0, h - TIMELINE_HEIGHT, grid_sz):
+        pygame.draw.line(surface, GRID_COLOR, (0, i + off_y - grid_sz), (w, i + off_y - grid_sz))
+
+    # Draw Skeleton
+    # HACK: Temporarily modify root pos for drawing
+    orig_root_x, orig_root_y = root_bone.x, root_bone.y
+    root_bone.x += camera_pan[0]
+    root_bone.y += camera_pan[1]
+    
+    def recursive_draw(bone):
+        bone.draw(surface, draw_bones, selected_bone=selected_bone)
+        # Highlight pivot if selected
+        if bone == selected_bone and mode == "PIVOT" and draw_bones:
+            wx, wy, _, _, _ = bone.get_world_transform()
+            pygame.draw.line(surface, PIVOT_COLOR, (wx-10, wy), (wx+10, wy), 2)
+            pygame.draw.line(surface, PIVOT_COLOR, (wx, wy-10), (wx, wy+10), 2)
+            
+    recursive_draw(root_bone)
+    
+    # Restore root
+    root_bone.x = orig_root_x
+    root_bone.y = orig_root_y
+    
+    # UI Overlay (Timeline)
+    if time_info:
+        curr, dur = time_info
+        pygame.draw.rect(surface, TIMELINE_BG, (0, h - TIMELINE_HEIGHT, w, TIMELINE_HEIGHT))
+        
+        # Playhead
+        if dur > 0:
+            ph_x = (curr / dur) * w
+            pygame.draw.line(surface, (255, 0, 0), (ph_x, h - TIMELINE_HEIGHT), (ph_x, h), 2)
+
+def export_gif(filepath, root_bone, animation):
+    print(f"Starting GIF export to {filepath}...")
+    frames = []
+    fps = 30
+    duration = animation.duration
+    total_frames = int(duration * fps)
+    
+    # Create a temporary surface for rendering
+    # We exclude the timeline for the export, usually desirable? 
+    # Or we can keep it. Let's keep the whole screen for now for simplicity, 
+    # or maybe crop the timeline? Let's crop the timeline out.
+    
+    render_w = SCREEN_WIDTH
+    render_h = SCREEN_HEIGHT - TIMELINE_HEIGHT
+    surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT)) # Render full then subsurf
+    
+    # Center camera for export? Or use current camera?
+    # Using current camera is best so user can frame the shot.
+    # We need to pass the camera_pan from main, but we don't have it here.
+    # We'll assume a default or passed in. 
+    # Actually, let's just update the function signature to accept camera_pan.
+    pass 
+
+def export_gif_with_camera(filepath, root_bone, animation, camera_pan):
+    frames = []
+    fps = 30
+    duration = animation.duration
+    steps = int(duration * fps)
+    
+    print(f"Exporting {steps} frames to {filepath}...")
+    
+    temp_screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    
+    for i in range(steps):
+        t = (i / fps)
+        animation.apply(t, root_bone)
+        
+        # Render without UI selection highlights and without bones
+        render_scene(temp_screen, root_bone, camera_pan, None, "NONE", time_info=None, draw_bones=False)
+        
+        # Capture - We crop out the timeline at the bottom
+        view = pygame.surfarray.array3d(temp_screen)
+        # Rotate because surfarray is transposed (width, height, 3) -> (height, width, 3)
+        view = view.transpose([1, 0, 2])
+        
+        # Crop height
+        view = view[:SCREEN_HEIGHT-TIMELINE_HEIGHT, :, :]
+        
+        frames.append(view)
+        
+        if i % 10 == 0:
+            print(f"Rendered frame {i}/{steps}")
+
+    print("Saving GIF...")
+    try:
+        imageio.mimsave(filepath, frames, fps=fps, loop=0)
+        print("Done!")
+    except Exception as e:
+        print(f"Error saving GIF: {e}")
+
 # -----------------------------------------------------------------------------
 # Main Editor
 # -----------------------------------------------------------------------------
@@ -415,6 +525,7 @@ def main():
     
     # Modes: SELECT, MOVE, ROTATE, PIVOT
     mode = "SELECT" 
+    show_bones = True
     
     animation = Animation()
     current_time = 0.0
@@ -446,6 +557,9 @@ def main():
                 elif event.key == pygame.K_e: mode = "ROTATE"
                 elif event.key == pygame.K_r: mode = "PIVOT"
                 
+                # View Options
+                elif event.key == pygame.K_b: show_bones = not show_bones
+
                 # Actions
                 elif event.key == pygame.K_l: # Load Image as Child
                     filepath = filedialog.askopenfilename(filetypes=[("Images", "*.png;*.jpg;*.jpeg;*.bmp")])
@@ -490,6 +604,12 @@ def main():
                     filepath = filedialog.asksaveasfilename(defaultextension=".toml", filetypes=[("TOML Config", "*.toml")])
                     if filepath:
                         save_scene_to_toml(filepath, root_bone, animation)
+
+                # Export GIF
+                elif event.key == pygame.K_x:
+                    filepath = filedialog.asksaveasfilename(defaultextension=".gif", filetypes=[("GIF Image", "*.gif")])
+                    if filepath:
+                        export_gif_with_camera(filepath, root_bone, animation, camera_pan)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1: # Left Click
@@ -572,73 +692,21 @@ def main():
             animation.apply(current_time, root_bone)
 
         # --- Drawing ---
-        screen.fill(BG_COLOR)
+        render_scene(screen, root_bone, camera_pan, selected_bone, mode, (current_time, animation.duration), show_bones)
         
-        # Grid
-        grid_sz = 50
-        off_x = camera_pan[0] % grid_sz
-        off_y = camera_pan[1] % grid_sz
-        for i in range(0, SCREEN_WIDTH, grid_sz):
-            pygame.draw.line(screen, GRID_COLOR, (i + off_x - grid_sz, 0), (i + off_x - grid_sz, SCREEN_HEIGHT - TIMELINE_HEIGHT))
-        for i in range(0, SCREEN_HEIGHT - TIMELINE_HEIGHT, grid_sz):
-            pygame.draw.line(screen, GRID_COLOR, (0, i + off_y - grid_sz), (SCREEN_WIDTH, i + off_y - grid_sz))
-
-        # Draw Skeleton (apply camera transform)
-        # We cheat by creating a temporary surface or just offset drawing? 
-        # Simplest is to offset the root bone, but that changes data.
-        # Better: wrapping the draw call with an offset.
-        
-        # Let's just manually offset the rendering origin by shifting the coordinate system logic
-        # But Bone.draw uses get_world_transform which starts at 0,0
-        # So we add camera_pan to the final coordinates. 
-        # Actually, we can just set root_bone parent-like offset if we treat camera as "World Root".
-        # But let's stick to: Bone.draw takes a surface. We can make a subsurface or just translate in draw.
-        # Easier: Modify Bone.draw to accept offset.
-        
-        # HACK: Temporarily modify root pos for drawing (bad practice but works for simple prototype)
-        orig_root_x, orig_root_y = root_bone.x, root_bone.y
-        root_bone.x += camera_pan[0]
-        root_bone.y += camera_pan[1]
-        
-        selected_global = selected_bone # Track who is selected
-        
-        # Pass "selected_bone" to draw so it highlights correctly
-        def recursive_draw(bone):
-            bone.draw(screen, True, selected_bone=selected_bone)
-            # Highlight pivot if selected
-            if bone == selected_bone and mode == "PIVOT":
-                # Draw pivot helper
-                wx, wy, wrot, wsx, wsy = bone.get_world_transform()
-                # Calculate pivot world loc... (reused logic from draw)
-                # For now just draw a cross at origin (which is the pivot location in world space)
-                pygame.draw.line(screen, PIVOT_COLOR, (wx-10, wy), (wx+10, wy), 2)
-                pygame.draw.line(screen, PIVOT_COLOR, (wx, wy-10), (wx, wy+10), 2)
-                
-        recursive_draw(root_bone)
-        
-        # Restore root
-        root_bone.x = orig_root_x
-        root_bone.y = orig_root_y
-        
-        # UI Overlay
-        # Timeline
-        pygame.draw.rect(screen, TIMELINE_BG, (0, SCREEN_HEIGHT - TIMELINE_HEIGHT, SCREEN_WIDTH, TIMELINE_HEIGHT))
-        
-        # Playhead
-        ph_x = (current_time / animation.duration) * SCREEN_WIDTH
-        pygame.draw.line(screen, (255, 0, 0), (ph_x, SCREEN_HEIGHT - TIMELINE_HEIGHT), (ph_x, SCREEN_HEIGHT), 2)
-        
-        # Keyframe markers
+        # UI Overlay (Text only, timeline is handled in render_scene)
+        # Re-draw timeline markers (keyframes) on top because render_scene handles base timeline
         for k in animation.keyframes:
             kx = (k.time / animation.duration) * SCREEN_WIDTH
             pygame.draw.circle(screen, (255, 255, 0), (int(kx), SCREEN_HEIGHT - TIMELINE_HEIGHT + 10), 5)
 
         # Info Text
         infos = [
-            f"Mode: {mode} (Q,W,E,R)",
+            f"Mode: {mode} (Q,W,E,R) | Bones: {'ON' if show_bones else 'OFF'} (B)",
             f"Selected: {selected_bone.name}",
             f"Time: {current_time:.2f} / {animation.duration:.2f}",
             "Controls: L=Load Img, N=New Node, Del=Delete, Space=Play, K=Keyframe",
+            "Save: Ctrl+S | Open: O | Export GIF: X",
             "Mouse: Left Drag to Edit, Left Click to Select"
         ]
         
