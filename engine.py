@@ -275,70 +275,19 @@ def get_bone_at_pos_recursive(bone, target_pos, threshold=10):
     return None
 
 def get_bone_at_pos(root_bone, mx, my, camera_pan, camera_zoom):
-    # To check hit, we temporarily apply the camera transform to the root, just like in render
-    orig_x, orig_y = root_bone.x, root_bone.y
-    orig_sx, orig_sy = root_bone.scale_x, root_bone.scale_y
+    # Inverse Camera Transform: Calculate Mouse position in World Space
+    # Screen = (World + Pan) * Zoom
+    # World = (Screen / Zoom) - Pan
     
-    # Apply Camera Transform
-    # We want the root to be at camera_pan, and scaled by zoom.
-    # BUT get_world_transform applies parent transform. Root has no parent.
-    # So modifying root properties works.
+    world_mx = (mx / camera_zoom) - camera_pan[0]
+    world_my = (my / camera_zoom) - camera_pan[1]
     
-    # Zoom should ideally happen around a center (like screen center), but for simplicity let's scale from (0,0) or just scale the root properties.
-    # If we scale root.scale, all children scale.
-    # Position: If we zoom in, the point (0,0) stays at (0,0)? usually we zoom towards mouse or center.
-    # Let's assume simple scaling for now:
+    # Threshold in World Space
+    # Screen Threshold = 15 px
+    # World Threshold = 15 / Zoom
+    world_threshold = 15 / camera_zoom
     
-    root_bone.x = (root_bone.x + camera_pan[0]) 
-    # Wait, if we scale root, the position logic inside get_world_transform for children
-    # uses parent's scale. So modifying root scale works for the whole hierarchy size.
-    # But what about root's own position?
-    
-    # Let's apply the zoom to the root's transform relative to origin.
-    # Actually, render_scene does NOT currently apply zoom. I need to implement it there first.
-    
-    # Let's rewrite this function to just take the root_bone which has ALREADY been modified by the caller (main loop) for hit testing?
-    # No, main loop shouldn't modify bone state for logic.
-    
-    # Better: Inverse transform mouse to "Scene Space"
-    # Scene Space = (Mouse - Pan) / Zoom ?
-    # If we zoom centered on screen center (W/2, H/2):
-    # World = (Mouse - Center) / Zoom + Center - Pan
-    
-    # Let's implement the camera transform logic in render_scene first, then match it here.
-    # For now, I'll just use a placeholder that assumes 1.0 zoom and simple pan.
-    
-    # Re-implementing the original simple check but correcting for pan (which was passed as offset in main previously)
-    # Now we will handle it properly.
-    
-    # Inverse Mouse Transform (assuming Scale around (0,0) for now to match render_scene logic below)
-    # ScreenX = (WorldX + PanX) * Zoom
-    # WorldX = (ScreenX / Zoom) - PanX
-    
-    # Actually, let's look at how we want render_scene to work.
-    # Standard 2D Camera:
-    # 1. Translate by -CameraPos
-    # 2. Scale by Zoom
-    # 3. Translate by ScreenCenter (optional)
-    
-    # Our current 'camera_pan' seems to be a direct offset.
-    
-    # Let's adjust root bone for the check.
-    
-    root_bone.x = (root_bone.x + camera_pan[0]) * camera_zoom
-    root_bone.y = (root_bone.y + camera_pan[1]) * camera_zoom
-    root_bone.scale_x *= camera_zoom
-    root_bone.scale_y *= camera_zoom
-    
-    found = get_bone_at_pos_recursive(root_bone, (mx, my), 10 * camera_zoom) # Scale threshold too?
-    
-    # Restore
-    root_bone.x = orig_x
-    root_bone.y = orig_y
-    root_bone.scale_x = orig_sx
-    root_bone.scale_y = orig_sy
-    
-    return found
+    return get_bone_at_pos_recursive(root_bone, (world_mx, world_my), world_threshold)
 
 def get_flat_bone_list(root_bone):
     bones = []
@@ -384,12 +333,34 @@ def get_keyframe_at_pos(animation, mx, my, duration, root_bone):
     
     return closest_keyframe
 
-def render_scene(surface, root_bone, camera_pan, camera_zoom, selected_bone, mode, time_info=None, draw_bones=True):
+def render_scene(surface, root_bone, camera_pan, camera_zoom, selected_bone, mode, time_info=None, draw_bones=True, background_image=None):
     """
     Draws the entire scene to the provided surface.
     time_info: tuple (current_time, duration) for drawing timeline
     """
     surface.fill(BG_COLOR)
+    
+    # Draw Reference Background (World Space)
+    if background_image:
+        # Calculate screen position for background (0,0 world)
+        bg_x = camera_pan[0] * camera_zoom
+        bg_y = camera_pan[1] * camera_zoom
+        
+        # Scale background
+        # Note: This scales the original image every frame which is slow.
+        # Optimization: Cache scaled image if zoom changes, but for MVP dynamic scaling is okay.
+        # Or better: use transform.scale on blit if supported, or rotate/zoom.
+        # Pygame blit doesn't scale. We must scale surface.
+        
+        orig_w = background_image.get_width()
+        orig_h = background_image.get_height()
+        new_w = int(orig_w * camera_zoom)
+        new_h = int(orig_h * camera_zoom)
+        
+        # Only draw if reasonable size
+        if new_w > 0 and new_h > 0:
+            scaled_bg = pygame.transform.scale(background_image, (new_w, new_h))
+            surface.blit(scaled_bg, (bg_x, bg_y))
     
     # Grid
     grid_sz = int(50 * camera_zoom)

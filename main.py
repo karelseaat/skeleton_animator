@@ -5,7 +5,7 @@ from tkinter import filedialog, Tk
 
 # Local Modules
 from constants import *
-from engine import Bone, Animation, render_scene, get_bone_at_pos, get_keyframe_at_pos, get_flat_bone_list
+from engine import Bone, Animation, render_scene, get_bone_at_pos, get_keyframe_at_pos, get_flat_bone_list, Keyframe
 from serializers import (
     load_scene_from_toml, 
     save_scene_to_toml, 
@@ -20,6 +20,7 @@ from exporters import (
     export_sprite_sheet
 )
 from easing import EASING_NAMES
+from history import HistoryManager, TransformBoneCommand, AddOrReplaceKeyframeCommand, DeleteKeyframeCommand, ChangeEasingCommand
 
 # Initialize Tkinter for file dialogs (hide the main window)
 root_tk = Tk()
@@ -89,6 +90,14 @@ def draw_keyframe_marker(surface, x, y, fill_color, easing_type):
         pygame.draw.circle(surface, fill_color, (int(x), int(y)), size)
         pygame.draw.circle(surface, border_color, (int(x), int(y)), size + 2, 2) # Border is 2px wider
 
+def get_bone_state(bone):
+    return {
+        'x': bone.x, 'y': bone.y,
+        'rotation': bone.rotation,
+        'scale_x': bone.scale_x, 'scale_y': bone.scale_y,
+        'pivot_x': bone.pivot_x, 'pivot_y': bone.pivot_y,
+        'z_index': bone.z_index
+    }
 
 def main():
     pygame.init()
@@ -112,7 +121,10 @@ def main():
     
     selected_bone = root_bone
     
-    # Modes: SELECT, MOVE, ROTATE, PIVOT
+    # Background Image State
+    bg_image = None
+    
+    # Modes: SELECT, MOVE, ROTATE, PIVOT, SCALE
     mode = "SELECT" 
     show_bones = True
     show_help = False # Help overlay state
@@ -121,11 +133,14 @@ def main():
     current_time = 0.0
     is_playing = False
     
+    history = HistoryManager()
+    
     running = True
     dragging = False
     dragging_keyframe = None
     selected_keyframe = None
     last_mouse_pos = (0, 0)
+    drag_start_bone_state = None
     
     # Property Editing State
     # Index maps to properties in editable_props list
@@ -154,11 +169,25 @@ def main():
                 elif event.key == pygame.K_h: # Toggle Help
                     show_help = not show_help
 
+                # Undo / Redo
+                elif event.key == pygame.K_z and (pygame.key.get_mods() & pygame.KMOD_CTRL):
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT: # Ctrl+Shift+Z for Redo
+                        history.redo()
+                    else: # Ctrl+Z for Undo
+                        history.undo()
+                    # Apply animation state after undo/redo
+                    animation.apply(current_time, root_bone)
+                elif event.key == pygame.K_y and (pygame.key.get_mods() & pygame.KMOD_CTRL): # Ctrl+Y for Redo
+                    history.redo()
+                    animation.apply(current_time, root_bone)
+
+
                 # Modes
                 elif event.key == pygame.K_q: mode = "SELECT"
                 elif event.key == pygame.K_w: mode = "MOVE"
                 elif event.key == pygame.K_e: mode = "ROTATE"
                 elif event.key == pygame.K_r: mode = "PIVOT"
+                elif event.key == pygame.K_s: mode = "SCALE" # Scale Mode
                 
                 # View Options
                 elif event.key == pygame.K_b: show_bones = not show_bones
@@ -170,26 +199,39 @@ def main():
                     animation.duration += 0.1
 
                 # Actions
-                elif event.key == pygame.K_l: # Load Image as Child
-                    filepath = filedialog.askopenfilename(filetypes=[("Images", "*.png;*.jpg;*.jpeg;*.bmp")])
-                    if filepath:
-                        new_bone = Bone(f"Bone_{bone_counter}", filepath, parent=selected_bone)
-                        bone_counter += 1
-                        selected_bone = new_bone
-                        # Default position to slightly offset so it's visible
-                        selected_bone.x = 50
+                elif event.key == pygame.K_l: 
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT: # Shift+L: Load Background
+                        filepath = filedialog.askopenfilename(filetypes=[("Images", "*.png;*.jpg;*.jpeg;*.bmp")])
+                        if filepath:
+                            try:
+                                bg_image = pygame.image.load(filepath).convert_alpha()
+                                print(f"Loaded background image: {filepath}")
+                            except Exception as e:
+                                print(f"Error loading background: {e}")
+                    else: # L: Load Bone Image
+                        filepath = filedialog.askopenfilename(filetypes=[("Images", "*.png;*.jpg;*.jpeg;*.bmp")])
+                        if filepath:
+                            new_bone = Bone(f"Bone_{bone_counter}", filepath, parent=selected_bone)
+                            bone_counter += 1
+                            selected_bone = new_bone
+                            selected_bone.x = 50
+                            # TODO: Add command for adding/deleting bones
                 
                 elif event.key == pygame.K_n: # New Empty Bone
                     new_bone = Bone(f"Bone_{bone_counter}", parent=selected_bone)
                     bone_counter += 1
                     selected_bone = new_bone
                     selected_bone.x = 50
+                    # TODO: Add command for adding/deleting bones
                 
                 elif event.key == pygame.K_c: # Cycle Easing Type
                     if selected_keyframe:
-                        current_idx = EASING_NAMES.index(selected_keyframe.easing_type)
+                        old_easing = selected_keyframe.easing_type
+                        current_idx = EASING_NAMES.index(old_easing)
                         next_idx = (current_idx + 1) % len(EASING_NAMES)
                         selected_keyframe.easing_type = EASING_NAMES[next_idx]
+                        
+                        history.push(ChangeEasingCommand(selected_keyframe, old_easing, selected_keyframe.easing_type))
                         print(f"Keyframe easing changed to: {selected_keyframe.easing_type}")
                 
                 # Property Panel Navigation
@@ -200,6 +242,8 @@ def main():
                 # Property Modification (Arrows)
                 elif event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                     if selected_bone:
+                        old_state = get_bone_state(selected_bone)
+                        
                         prop_name = editable_props[focused_prop_idx]
                         delta = 1.0 if event.key == pygame.K_UP else -1.0
                         
@@ -218,24 +262,34 @@ def main():
                             setattr(selected_bone, prop_name, int(new_val))
                         else:
                             setattr(selected_bone, prop_name, new_val)
-                        
-                        # Auto-keyframe if playing or just helpful
-                        # print(f"Modified {prop_name} to {new_val}")
+                            
+                        new_state = get_bone_state(selected_bone)
+                        # Push command only if something changed
+                        if any(new_state[key] != old_state[key] for key in new_state):
+                            history.push(TransformBoneCommand(selected_bone, old_state, new_state))
 
                 elif event.key == pygame.K_LEFTBRACKET: # [
                     if selected_bone:
+                        old_state = get_bone_state(selected_bone)
                         selected_bone.z_index -= 1
-                        print(f"Z-Index for '{selected_bone.name}': {selected_bone.z_index}")
+                        new_state = get_bone_state(selected_bone)
+                        history.push(TransformBoneCommand(selected_bone, old_state, new_state))
                 elif event.key == pygame.K_RIGHTBRACKET: # ]
                     if selected_bone:
+                        old_state = get_bone_state(selected_bone)
                         selected_bone.z_index += 1
-                        print(f"Z-Index for '{selected_bone.name}': {selected_bone.z_index}")
+                        new_state = get_bone_state(selected_bone)
+                        history.push(TransformBoneCommand(selected_bone, old_state, new_state))
 
                 elif event.key == pygame.K_DELETE or event.key == pygame.K_BACKSPACE:
                     if selected_keyframe:
+                        history.push(DeleteKeyframeCommand(animation, selected_keyframe))
+                        # The command's execute method handles removal
+                        # For now, manually remove it and let command just store it.
                         animation.keyframes.remove(selected_keyframe)
                         selected_keyframe = None
                     elif selected_bone and selected_bone.parent:
+                        # TODO: Add command for adding/deleting bones
                         def get_bone_names_to_delete(bone):
                             names = {bone.name}
                             for child in bone.children:
@@ -253,9 +307,28 @@ def main():
                     is_playing = not is_playing
                 
                 elif event.key == pygame.K_k:
-                    kf_easing = selected_keyframe.easing_type if selected_keyframe else EASING_NAMES[0]
-                    animation.add_keyframe(current_time, selected_bone, kf_easing)
-                    print(f"Keyframe added for '{selected_bone.name}' at {current_time:.2f}s")
+                    if selected_bone:
+                        kf_easing = selected_keyframe.easing_type if selected_keyframe else EASING_NAMES[0]
+                        
+                        state = {
+                            'x': selected_bone.x, 'y': selected_bone.y, 'rot': selected_bone.rotation,
+                            'sx': selected_bone.scale_x, 'sy': selected_bone.scale_y
+                        }
+                        new_kf = Keyframe(current_time, selected_bone.name, state, kf_easing)
+                        
+                        # Check for existing keyframe to be replaced
+                        replaced_kf = None
+                        for k in animation.keyframes:
+                            if k.bone_name == selected_bone.name and abs(k.time - current_time) < 0.01:
+                                replaced_kf = k
+                                break
+                        
+                        command = AddOrReplaceKeyframeCommand(animation, new_kf, replaced_kf)
+                        command.execute() # Execute the command which adds/replaces and sorts
+                        history.push(command)
+                        
+                        selected_keyframe = new_kf # Select the newly added/replaced keyframe
+                        print(f"Keyframe added/replaced for '{selected_bone.name}' at {current_time:.2f}s")
                 
                 # Save/Load keys...
                 elif event.key == pygame.K_o: # Load TOML
@@ -266,6 +339,9 @@ def main():
                             root_bone = new_root
                             animation = new_anim
                             selected_bone = root_bone
+                            # Reset history on load
+                            history = HistoryManager()
+                            print(f"Loaded scene from {filepath}")
 
                 elif event.key == pygame.K_s and (pygame.key.get_mods() & pygame.KMOD_CTRL):
                     filepath = filedialog.asksaveasfilename(defaultextension=".toml", filetypes=[("TOML Config", "*.toml")])
@@ -323,40 +399,43 @@ def main():
                         if clicked:
                             selected_bone = clicked
                             dragging = "BONE"
+                            # Capture state for Undo on drag
+                            drag_start_bone_state = get_bone_state(selected_bone)
                         else:
                             dragging = "CAMERA"
                             last_mouse_pos = (mx, my) # Reset for accurate delta
                 elif event.button == 3: # Right Click
                     clicked_kf = get_keyframe_at_pos(animation, mx, my, animation.duration, root_bone)
                     if clicked_kf:
-                        animation.keyframes.remove(clicked_kf)
+                        history.push(DeleteKeyframeCommand(animation, clicked_kf))
+                        # For DeleteKeyframeCommand, its execute method will perform the actual removal.
+                        # We just push the command and let it manage the state.
+                        command = DeleteKeyframeCommand(animation, clicked_kf)
+                        command.execute() # Remove it
+                        history.push(command) # Push the executed command
+                        selected_keyframe = None # Deselect deleted keyframe
                 elif event.button == 4 or event.button == 5: # Mouse Wheel Zoom
                     zoom_factor = 1.1 if event.button == 4 else 1/1.1 # Scroll up (4) or down (5)
                     
                     old_zoom = camera_zoom
                     new_zoom = max(0.1, min(5.0, camera_zoom * zoom_factor))
                     
-                    # Render Logic is: Screen = (World + Pan) * Zoom
-                    # So: Pan = (Screen / Zoom) - World
-                    # We want World under Mouse to stay constant.
-                    # World_Under_Mouse = (Mouse / OldZoom) - OldPan
-                    
-                    # NewPan = (Mouse / NewZoom) - World_Under_Mouse
-                    # NewPan = (Mouse / NewZoom) - ((Mouse / OldZoom) - OldPan)
-                    # NewPan = OldPan + (Mouse / NewZoom) - (Mouse / OldZoom)
-                    
+                    # Calculate new pan to keep world position under mouse
                     camera_pan[0] = camera_pan[0] + (mx / new_zoom) - (mx / old_zoom)
                     camera_pan[1] = camera_pan[1] + (my / new_zoom) - (my / old_zoom)
                     
                     camera_zoom = new_zoom
 
             elif event.type == pygame.MOUSEBUTTONUP:
-                if dragging == "BONE" and selected_bone and mode != "PIVOT":
-                    kf_easing = selected_keyframe.easing_type if selected_keyframe else EASING_NAMES[0]
-                    animation.add_keyframe(current_time, selected_bone, kf_easing)
+                if dragging == "BONE" and selected_bone:
+                    current_state = get_bone_state(selected_bone)
+                    if drag_start_bone_state and current_state != drag_start_bone_state:
+                        # Push Undo command for bone transform if state changed
+                        history.push(TransformBoneCommand(selected_bone, drag_start_bone_state, current_state))
                 
                 dragging = False
                 dragging_keyframe = None
+                drag_start_bone_state = None
 
             elif event.type == pygame.MOUSEMOTION:
                 dx = mx - last_mouse_pos[0]
@@ -365,6 +444,15 @@ def main():
                 if dragging == "KEYFRAME" and dragging_keyframe and animation.duration > 0:
                     ratio = max(0, min(1, mx / SCREEN_WIDTH))
                     new_time = ratio * animation.duration
+                    
+                    # Store previous state for Undo/Redo if we move a keyframe
+                    # This is tricky as moving keyframe is a continuous action
+                    # For MVP, we won't make a command for every frame drag of KF
+                    # But if we were to, it would be a "MoveKeyframeCommand"
+                    
+                    # For now, let's just update the time.
+                    # Undo/Redo of keyframe movement is more complex and usually involves a single command for the full drag.
+                    # Leaving it out for this step.
                     dragging_keyframe.time = new_time
                     animation.keyframes.sort(key=lambda k: k.time)
                 
@@ -375,8 +463,8 @@ def main():
                         animation.apply(current_time, root_bone)
                 
                 elif dragging == "CAMERA":
-                    camera_pan[0] += dx # Panning is just moving the origin (viewport offset)
-                    camera_pan[1] += dy
+                    camera_pan[0] += dx / camera_zoom
+                    camera_pan[1] += dy / camera_zoom
                 
                 elif dragging == "BONE" and selected_bone:
                     if mode == "MOVE":
@@ -395,11 +483,18 @@ def main():
                         selected_bone.y += local_dy
                         
                     elif mode == "ROTATE":
-                        selected_bone.rotation += dx  # Drag X to rotate
+                        selected_bone.rotation += dx  # Rotate sensitivity usually constant
                     
                     elif mode == "PIVOT":
                         selected_bone.pivot_x += dx / camera_zoom
                         selected_bone.pivot_y += dy / camera_zoom
+                        
+                    elif mode == "SCALE": # Dragging adjusts Scale
+                        # Drag X -> Scale X, Drag Y -> Scale Y
+                        # Scale Factor: Moving right/up increases, left/down decreases
+                        sens = 0.01
+                        selected_bone.scale_x += dx * sens
+                        selected_bone.scale_y -= dy * sens # Y is inverted on screen
 
         last_mouse_pos = (mx, my)
 
@@ -412,7 +507,7 @@ def main():
 
         # --- Drawing ---
         main_scene_surface = screen.subsurface((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
-        render_scene(main_scene_surface, root_bone, camera_pan, camera_zoom, selected_bone, mode, (current_time, animation.duration), show_bones)
+        render_scene(main_scene_surface, root_bone, camera_pan, camera_zoom, selected_bone, mode, (current_time, animation.duration), show_bones, bg_image)
         
         # Draw Properties Panel
         panel_rect = pygame.Rect(SCREEN_WIDTH, 0, PROPERTIES_PANEL_WIDTH, SCREEN_HEIGHT)
@@ -567,14 +662,15 @@ def main():
                 if selected_keyframe == k:
                     pygame.draw.rect(screen, SELECTED_COLOR, (int(kx) - 12, int(ky) - 12, 24, 24), 2)
 
-        # Help Overlay (Full Screen)
+        # Help Overlay
         if show_help:
             full_w = SCREEN_WIDTH + PROPERTIES_PANEL_WIDTH
             overlay = pygame.Surface((full_w, SCREEN_HEIGHT))
-            overlay.set_alpha(230)
+            overlay.set_alpha(230) # Slightly darker
             overlay.fill((20, 20, 20))
             screen.blit(overlay, (0, 0))
             
+            # Split Help into columns
             col1_x = 50
             col2_x = full_w // 2 + 20
             start_y = 50
@@ -588,16 +684,20 @@ def main():
                 "  H: Toggle This Help",
                 "  Mouse Wheel: Zoom Camera",
                 "  < / >: Adjust Animation Duration",
+                "  Ctrl+Z: Undo",
+                "  Ctrl+Y: Redo",
                 "",
                 "MODES",
                 "  Q: Select Mode",
                 "  W: Move Mode",
                 "  E: Rotate Mode",
                 "  R: Pivot Mode",
+                "  S: Scale Mode",
                 "",
                 "BONE MANIPULATION",
-                "  Mouse Drag: Move/Rotate/Pivot",
+                "  Mouse Drag: Move/Rotate/Pivot/Scale",
                 "  [ / ]: Change Z-Index (Draw Order)",
+                "  Shift+L: Load Background Reference",
                 "  L: Load Image (Child)",
                 "  N: New Empty Bone",
                 "  Del: Delete Bone",
