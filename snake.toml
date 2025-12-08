@@ -1,111 +1,137 @@
-# Snake Configuration
+[[bones]]
+name = "Head"
+image = "assets/head.png"
+x = 0.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 15.0
+pivot_y = 15.0
+color = [ 255, 100, 100,]
+
+[[bones]]
+name = "Body1"
+parent = "Head"
+image = "assets/limb.png"
+x = 30.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 10.0
+color = [ 100, 255, 100,]
+
+[[bones]]
+name = "Body2"
+parent = "Body1"
+image = "assets/limb.png"
+x = 30.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 10.0
+color = [ 100, 100, 255,]
+
+[[bones]]
+name = "Tail"
+parent = "Body2"
+image = "assets/limb.png"
+x = 30.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 10.0
+color = [ 255, 255, 100,]
 
 [meta]
 duration = 2.0
 loop = true
 
-# --- Structure ---
-
-[[bones]]
-name = "Head"
-image = "assets/snake_head.png"
-x = 200
-y = 360
-pivot_x = 30
-pivot_y = 30
-rotation = 0
-
-[[bones]]
-name = "Body1"
-parent = "Head"
-image = "assets/snake_body.png"
-x = -35
-y = 15
-pivot_x = 35
-pivot_y = 15
-rotation = 0
-
-[[bones]]
-name = "Body2"
-parent = "Body1"
-image = "assets/snake_body.png"
-x = -35
-y = 15
-pivot_x = 35
-pivot_y = 15
-rotation = 0
-
-[[bones]]
-name = "Body3"
-parent = "Body2"
-image = "assets/snake_body.png"
-x = -35
-y = 15
-pivot_x = 35
-pivot_y = 15
-rotation = 0
-
-[[bones]]
-name = "Body4"
-parent = "Body3"
-image = "assets/snake_body.png"
-x = -35
-y = 15
-pivot_x = 35
-pivot_y = 15
-rotation = 0
-
-[[bones]]
-name = "Tail"
-parent = "Body4"
-image = "assets/snake_tail.png"
-x = -35
-y = 15
-pivot_x = 40 # Pivot at wide end
-pivot_y = 15
-rotation = 0
-scale_x = -1.0 # Flip so point is away
-
-# --- Animation (Slither Wave) ---
-
+[animations]
 [[animations.keyframes]]
 time = 0.0
-    [animations.keyframes.bones.Head]
-    rotation = 0
-    x = 200
-    [animations.keyframes.bones.Body1]
-    rotation = 15
-    [animations.keyframes.bones.Body2]
-    rotation = -15
-    [animations.keyframes.bones.Body3]
-    rotation = 15
-    [animations.keyframes.bones.Body4]
-    rotation = -15
 
+[animations.keyframes.bones.Head]
+x = 0.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Body1]
+x = 30.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Body2]
+x = 30.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Tail]
+x = 30.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
 [[animations.keyframes]]
 time = 1.0
-    [animations.keyframes.bones.Head]
-    x = 400 # Move forward
-    rotation = 0
-    [animations.keyframes.bones.Body1]
-    rotation = -15
-    [animations.keyframes.bones.Body2]
-    rotation = 15
-    [animations.keyframes.bones.Body3]
-    rotation = -15
-    [animations.keyframes.bones.Body4]
-    rotation = 15
 
+[animations.keyframes.bones.Head]
+x = 0.0
+y = 20.0
+rotation = 30.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Body1]
+x = 30.0
+y = -10.0
+rotation = -30.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Body2]
+x = 30.0
+y = 15.0
+rotation = 20.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Tail]
+x = 30.0
+y = -20.0
+rotation = -25.0
+scale_x = 1.0
+scale_y = 1.0
 [[animations.keyframes]]
 time = 2.0
-    [animations.keyframes.bones.Head]
-    x = 600 # Move further
-    rotation = 0
-    [animations.keyframes.bones.Body1]
-    rotation = 15
-    [animations.keyframes.bones.Body2]
-    rotation = -15
-    [animations.keyframes.bones.Body3]
-    rotation = 15
-    [animations.keyframes.bones.Body4]
-    rotation = -15
+
+[animations.keyframes.bones.Head]
+x = 0.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Body1]
+x = 30.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Body2]
+x = 30.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Tail]
+x = 30.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0

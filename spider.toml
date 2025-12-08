@@ -1,138 +1,320 @@
-# Spider Configuration
-
-[meta]
-duration = 1.0
-loop = true
-
-# --- Structure ---
-
 [[bones]]
 name = "Body"
-image = "assets/spider_body.png"
-x = 640
-y = 360
-pivot_x = 40
-pivot_y = 40
-rotation = 0
+image = "assets/torso.png"
+x = 0.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 25.0
+pivot_y = 25.0
+color = [ 255, 100, 100,]
 
-# Front Left
 [[bones]]
-name = "L1_Upper"
+name = "Leg_FL"
 parent = "Body"
-image = "assets/spider_leg_upper.png"
-x = 10
-y = 20
-pivot_x = 5
-pivot_y = 55 # Pivot at body end
-rotation = 45
+image = "assets/limb.png"
+x = -20.0
+y = -20.0
+rotation = -45.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 5.0
+color = [ 100, 255, 100,]
 
 [[bones]]
-name = "L1_Lower"
-parent = "L1_Upper"
-image = "assets/spider_leg_lower.png"
-x = 0
-y = 0
-pivot_x = 4
-pivot_y = 45
-rotation = -60
-
-# Front Right
-[[bones]]
-name = "R1_Upper"
+name = "Leg_FR"
 parent = "Body"
-image = "assets/spider_leg_upper.png"
-x = 70
-y = 20
-pivot_x = 5
-pivot_y = 55
-rotation = -45
+image = "assets/limb.png"
+x = 20.0
+y = -20.0
+rotation = 45.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 5.0
+color = [ 100, 100, 255,]
 
 [[bones]]
-name = "R1_Lower"
-parent = "R1_Upper"
-image = "assets/spider_leg_lower.png"
-x = 0
-y = 0
-pivot_x = 4
-pivot_y = 45
-rotation = 60
-
-# Back Left
-[[bones]]
-name = "L2_Upper"
+name = "Leg_ML"
 parent = "Body"
-image = "assets/spider_leg_upper.png"
-x = 10
-y = 60
-pivot_x = 5
-pivot_y = 5
-rotation = 135
+image = "assets/limb.png"
+x = -30.0
+y = 0.0
+rotation = -90.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 5.0
+color = [ 255, 255, 100,]
 
 [[bones]]
-name = "L2_Lower"
-parent = "L2_Upper"
-image = "assets/spider_leg_lower.png"
-x = 0
-y = 60
-pivot_x = 4
-pivot_y = 4
-rotation = 60
-
-# Back Right
-[[bones]]
-name = "R2_Upper"
+name = "Leg_MR"
 parent = "Body"
-image = "assets/spider_leg_upper.png"
-x = 70
-y = 60
-pivot_x = 5
-pivot_y = 5
-rotation = -135
+image = "assets/limb.png"
+x = 30.0
+y = 0.0
+rotation = 90.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 5.0
+color = [ 255, 100, 255,]
 
 [[bones]]
-name = "R2_Lower"
-parent = "R2_Upper"
-image = "assets/spider_leg_lower.png"
-x = 0
-y = 60
-pivot_x = 4
-pivot_y = 4
-rotation = -60
+name = "Leg_BL"
+parent = "Body"
+image = "assets/limb.png"
+x = -20.0
+y = 20.0
+rotation = -135.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 5.0
+color = [ 100, 255, 255,]
 
-# --- Animation (Walking) ---
+[[bones]]
+name = "Leg_BR"
+parent = "Body"
+image = "assets/limb.png"
+x = 20.0
+y = 20.0
+rotation = 135.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 5.0
+color = [ 255, 150, 50,]
 
+[meta]
+duration = 2.0
+loop = true
+
+[animations]
 [[animations.keyframes]]
 time = 0.0
-    [animations.keyframes.bones.L1_Upper]
-    rotation = 65
-    [animations.keyframes.bones.R2_Upper]
-    rotation = -115
-    
-    [animations.keyframes.bones.R1_Upper]
-    rotation = -45
-    [animations.keyframes.bones.L2_Upper]
-    rotation = 135
 
+[animations.keyframes.bones.Body]
+x = 0.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_FL]
+x = -20.0
+y = -20.0
+rotation = -45.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_FR]
+x = 20.0
+y = -20.0
+rotation = 45.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_ML]
+x = -30.0
+y = 0.0
+rotation = -90.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_MR]
+x = 30.0
+y = 0.0
+rotation = 90.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_BL]
+x = -20.0
+y = 20.0
+rotation = -135.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_BR]
+x = 20.0
+y = 20.0
+rotation = 135.0
+scale_x = 1.0
+scale_y = 1.0
 [[animations.keyframes]]
 time = 0.5
-    [animations.keyframes.bones.L1_Upper]
-    rotation = 45
-    [animations.keyframes.bones.R2_Upper]
-    rotation = -135
 
-    [animations.keyframes.bones.R1_Upper]
-    rotation = -65
-    [animations.keyframes.bones.L2_Upper]
-    rotation = 115
-
+[animations.keyframes.bones.Body]
+x = 0.0
+y = 5.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_FL]
+x = -20.0
+y = -25.0
+rotation = -20.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_FR]
+x = 20.0
+y = -25.0
+rotation = 20.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_ML]
+x = -35.0
+y = -5.0
+rotation = -70.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_MR]
+x = 35.0
+y = -5.0
+rotation = 70.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_BL]
+x = -20.0
+y = 25.0
+rotation = -160.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_BR]
+x = 20.0
+y = 25.0
+rotation = 160.0
+scale_x = 1.0
+scale_y = 1.0
 [[animations.keyframes]]
 time = 1.0
-    [animations.keyframes.bones.L1_Upper]
-    rotation = 65
-    [animations.keyframes.bones.R2_Upper]
-    rotation = -115
-    
-    [animations.keyframes.bones.R1_Upper]
-    rotation = -45
-    [animations.keyframes.bones.L2_Upper]
-    rotation = 135
+
+[animations.keyframes.bones.Body]
+x = 0.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_FL]
+x = -20.0
+y = -20.0
+rotation = -45.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_FR]
+x = 20.0
+y = -20.0
+rotation = 45.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_ML]
+x = -30.0
+y = 0.0
+rotation = -90.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_MR]
+x = 30.0
+y = 0.0
+rotation = 90.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_BL]
+x = -20.0
+y = 20.0
+rotation = -135.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_BR]
+x = 20.0
+y = 20.0
+rotation = 135.0
+scale_x = 1.0
+scale_y = 1.0
+[[animations.keyframes]]
+time = 1.5
+
+[animations.keyframes.bones.Body]
+x = 0.0
+y = 5.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_FL]
+x = -20.0
+y = -15.0
+rotation = -70.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_FR]
+x = 20.0
+y = -15.0
+rotation = 70.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_ML]
+x = -30.0
+y = 5.0
+rotation = -120.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_MR]
+x = 30.0
+y = 5.0
+rotation = 120.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_BL]
+x = -20.0
+y = 25.0
+rotation = -110.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_BR]
+x = 20.0
+y = 25.0
+rotation = 110.0
+scale_x = 1.0
+scale_y = 1.0
+[[animations.keyframes]]
+time = 2.0
+
+[animations.keyframes.bones.Body]
+x = 0.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_FL]
+x = -20.0
+y = -20.0
+rotation = -45.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_FR]
+x = 20.0
+y = -20.0
+rotation = 45.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_ML]
+x = -30.0
+y = 0.0
+rotation = -90.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_MR]
+x = 30.0
+y = 0.0
+rotation = 90.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_BL]
+x = -20.0
+y = 20.0
+rotation = -135.0
+scale_x = 1.0
+scale_y = 1.0
+[animations.keyframes.bones.Leg_BR]
+x = 20.0
+y = 20.0
+rotation = 135.0
+scale_x = 1.0
+scale_y = 1.0
