@@ -1,0 +1,205 @@
+[[bones]]
+name = "Torso"
+image = "assets/torso.png"
+x = 0.0
+y = 0.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 25.0
+pivot_y = 50.0
+color = [200, 200, 200]
+z_index = 0
+
+[[bones]]
+name = "Head"
+parent = "Torso"
+image = "assets/head.png"
+x = 0.0
+y = -55.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 20.0
+pivot_y = 35.0
+color = [255, 200, 200]
+z_index = 1
+
+# --- Left Arm ---
+[[bones]]
+name = "UpperArm_L"
+parent = "Torso"
+image = "assets/limb.png"
+x = -25.0
+y = -40.0
+rotation = 20.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 10.0
+color = [100, 100, 255]
+z_index = -1
+
+[[bones]]
+name = "LowerArm_L"
+parent = "UpperArm_L"
+image = "assets/limb.png"
+x = 0.0
+y = 60.0
+rotation = 10.0
+scale_x = 0.9
+scale_y = 0.9
+pivot_x = 10.0
+pivot_y = 10.0
+color = [150, 150, 255]
+z_index = 0
+
+[[bones]]
+name = "Hand_L"
+parent = "LowerArm_L"
+image = "assets/limb.png"
+x = 0.0
+y = 55.0
+rotation = 0.0
+scale_x = 0.6
+scale_y = 0.4
+pivot_x = 10.0
+pivot_y = 5.0
+color = [200, 200, 255]
+z_index = 0
+
+# --- Right Arm ---
+[[bones]]
+name = "UpperArm_R"
+parent = "Torso"
+image = "assets/limb.png"
+x = 25.0
+y = -40.0
+rotation = -20.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 10.0
+color = [255, 255, 100]
+z_index = -1
+
+[[bones]]
+name = "LowerArm_R"
+parent = "UpperArm_R"
+image = "assets/limb.png"
+x = 0.0
+y = 60.0
+rotation = -10.0
+scale_x = 0.9
+scale_y = 0.9
+pivot_x = 10.0
+pivot_y = 10.0
+color = [255, 255, 150]
+z_index = 0
+
+[[bones]]
+name = "Hand_R"
+parent = "LowerArm_R"
+image = "assets/limb.png"
+x = 0.0
+y = 55.0
+rotation = 0.0
+scale_x = 0.6
+scale_y = 0.4
+pivot_x = 10.0
+pivot_y = 5.0
+color = [255, 255, 200]
+z_index = 0
+
+# --- Left Leg ---
+[[bones]]
+name = "UpperLeg_L"
+parent = "Torso"
+image = "assets/limb.png"
+x = -15.0
+y = 45.0
+rotation = 0.0
+scale_x = 1.1
+scale_y = 1.1
+pivot_x = 10.0
+pivot_y = 10.0
+color = [100, 255, 100]
+z_index = -2
+
+[[bones]]
+name = "LowerLeg_L"
+parent = "UpperLeg_L"
+image = "assets/limb.png"
+x = 0.0
+y = 65.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 10.0
+color = [150, 255, 150]
+z_index = 0
+
+[[bones]]
+name = "Foot_L"
+parent = "LowerLeg_L"
+image = "assets/limb.png"
+x = 0.0
+y = 60.0
+rotation = 90.0
+scale_x = 0.5
+scale_y = 0.8
+pivot_x = 10.0
+pivot_y = 10.0
+color = [200, 255, 200]
+z_index = 0
+
+# --- Right Leg ---
+[[bones]]
+name = "UpperLeg_R"
+parent = "Torso"
+image = "assets/limb.png"
+x = 15.0
+y = 45.0
+rotation = 0.0
+scale_x = 1.1
+scale_y = 1.1
+pivot_x = 10.0
+pivot_y = 10.0
+color = [100, 255, 255]
+z_index = -2
+
+[[bones]]
+name = "LowerLeg_R"
+parent = "UpperLeg_R"
+image = "assets/limb.png"
+x = 0.0
+y = 65.0
+rotation = 0.0
+scale_x = 1.0
+scale_y = 1.0
+pivot_x = 10.0
+pivot_y = 10.0
+color = [150, 255, 255]
+z_index = 0
+
+[[bones]]
+name = "Foot_R"
+parent = "LowerLeg_R"
+image = "assets/limb.png"
+x = 0.0
+y = 60.0
+rotation = 90.0
+scale_x = 0.5
+scale_y = 0.8
+pivot_x = 10.0
+pivot_y = 10.0
+color = [200, 255, 255]
+z_index = 0
+
+[meta]
+duration = 2.0
+loop = true
+
+[animations]
+keyframes = []
