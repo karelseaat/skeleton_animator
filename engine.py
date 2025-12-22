@@ -29,19 +29,24 @@ class Bone:
         self.x = 0.0
         self.y = 0.0
         self.rotation = 0.0 # Degrees
-        self.scale_x = 1.0
-        self.scale_y = 1.0
         
-        # Pivot (Relative to Image Top-Left)
+        # Size in pixels (actual display size, not scale)
+        if self.original_image:
+            self.size_x = float(self.original_image.get_width())
+            self.size_y = float(self.original_image.get_height())
+        else:
+            self.size_x = 1.0
+            self.size_y = 1.0
+        
+        # Pivot point: 0 = middle, -(size/2) = top-left, +(size/2) = bottom-right
         self.pivot_x = 0.0
         self.pivot_y = 0.0
         
-        if self.image:
-            self.pivot_x = self.image.get_width() / 2.0
-            self.pivot_y = self.image.get_height() / 2.0
-        
         # Color for timeline and bone node visualization
         self.color = (100, 150, 255)  # Default blue
+        
+        # Opacity
+        self.alpha = 255.0
         
         # Drawing Order
         self.z_index = 0
@@ -49,16 +54,16 @@ class Bone:
     def get_world_transform(self):
         """
         Calculates the world position and rotation.
-        Returns (x, y, rotation_degrees, scale_x, scale_y)
+        Returns (x, y, rotation_degrees, size_x, size_y)
         """
         if self.parent:
-            px, py, prot, psx, psy = self.parent.get_world_transform()
+            px, py, prot, _, _ = self.parent.get_world_transform()
             
-            # 1. Apply Parent Scaling to local position
-            lx = self.x * psx
-            ly = self.y * psy
+            # Local position is not scaled - absolute pixel positions
+            lx = self.x
+            ly = self.y
             
-            # 2. Rotate local position by parent rotation
+            # Rotate local position by parent rotation
             rad = math.radians(prot)
             cos_a = math.cos(rad)
             sin_a = math.sin(rad)
@@ -66,30 +71,31 @@ class Bone:
             wx = px + (lx * cos_a - ly * sin_a)
             wy = py + (lx * sin_a + ly * cos_a)
             
-            return wx, wy, prot + self.rotation, psx * self.scale_x, psy * self.scale_y
+            # Size is absolute in pixels
+            return wx, wy, prot + self.rotation, self.size_x, self.size_y
         else:
-            return self.x, self.y, self.rotation, self.scale_x, self.scale_y
+            return self.x, self.y, self.rotation, self.size_x, self.size_y
 
     def draw_image(self, surface):
-        wx, wy, wrot, wsx, wsy = self.get_world_transform()
+        wx, wy, wrot, size_x, size_y = self.get_world_transform()
         
-        if self.image:
-            # Scale first
-            if abs(wsx - 1.0) > 0.01 or abs(wsy - 1.0) > 0.01:
-                w = int(self.original_image.get_width() * abs(wsx))
-                h = int(self.original_image.get_height() * abs(wsy))
-                scaled_img = pygame.transform.scale(self.original_image, (max(1, w), max(1, h)))
+        if self.original_image:
+            # Scale image to exact size (in pixels)
+            w = int(abs(size_x))
+            h = int(abs(size_y))
+            if w > 0 and h > 0:
+                scaled_img = pygame.transform.scale(self.original_image, (w, h))
             else:
                 scaled_img = self.original_image
                 
             rotated_img = pygame.transform.rotate(scaled_img, -wrot) # Pygame rotates CCW
             
             # Calculate offset due to pivot rotation
-            # Vector from (0,0) of image to Pivot
-            piv_x = self.pivot_x * wsx
-            piv_y = self.pivot_y * wsy
+            # Pivot is normalized: 0 = middle, -(size/2) = left/top, +(size/2) = right/bottom
+            piv_x = self.pivot_x
+            piv_y = self.pivot_y
             
-            # Rotate this vector
+            # Rotate pivot vector
             rad = math.radians(wrot)
             cos_a = math.cos(rad)
             sin_a = math.sin(rad)
@@ -97,10 +103,13 @@ class Bone:
             rot_piv_x = piv_x * cos_a - piv_y * sin_a
             rot_piv_y = piv_x * sin_a + piv_y * cos_a
             
-            # The Draw position is WorldPos - RotatedPivot + (RectCorrection)
+            # Position = world pos - rotated pivot + rect correction
             rect = rotated_img.get_rect()
             rect.center = (wx + (rect.width/2 - rot_piv_x) - rect.width/2, 
                            wy + (rect.height/2 - rot_piv_y) - rect.height/2)
+            
+            if self.alpha < 255:
+                rotated_img.set_alpha(int(self.alpha))
             
             surface.blit(rotated_img, rect.topleft)
 
@@ -146,7 +155,8 @@ class Animation:
         """Add a keyframe for a specific bone"""
         state = {
             'x': bone.x, 'y': bone.y, 'rot': bone.rotation,
-            'sx': bone.scale_x, 'sy': bone.scale_y
+            'size_x': bone.size_x, 'size_y': bone.size_y,
+            'alpha': bone.alpha
         }
         
         # Remove existing keyframe for this bone at same time (approx)
@@ -220,8 +230,18 @@ class Animation:
                 while diff > 180: diff -= 360
                 bone.rotation = p['rot'] + diff * eased_t
                 
-                bone.scale_x = p['sx'] + (n['sx'] - p['sx']) * eased_t
-                bone.scale_y = p['sy'] + (n['sy'] - p['sy']) * eased_t
+                # Handle size (with backward compatibility for old 'sx', 'sy' keys)
+                p_size_x = p.get('size_x', p.get('sx', 1.0))
+                p_size_y = p.get('size_y', p.get('sy', 1.0))
+                n_size_x = n.get('size_x', n.get('sx', 1.0))
+                n_size_y = n.get('size_y', n.get('sy', 1.0))
+                bone.size_x = p_size_x + (n_size_x - p_size_x) * eased_t
+                bone.size_y = p_size_y + (n_size_y - p_size_y) * eased_t
+                
+                # Handle alpha (backward compatibility: if missing, default to 255)
+                p_alpha = p.get('alpha', 255.0)
+                n_alpha = n.get('alpha', 255.0)
+                bone.alpha = p_alpha + (n_alpha - p_alpha) * eased_t
             
             for child in bone.children:
                 apply_bone(child)
@@ -379,15 +399,13 @@ def render_scene(surface, root_bone, camera_pan, camera_zoom, selected_bone, mod
 
     # HACK: Temporarily modify root pos for drawing to apply Camera Transform
     orig_x, orig_y = root_bone.x, root_bone.y
-    orig_sx, orig_sy = root_bone.scale_x, root_bone.scale_y
+    orig_size_x, orig_size_y = root_bone.size_x, root_bone.size_y
     
     # Apply Pan and Zoom
-    # We scale the position and the size
-    # Pivot: Top-Left (0,0) for simplicity
     root_bone.x = (root_bone.x + camera_pan[0]) * camera_zoom
     root_bone.y = (root_bone.y + camera_pan[1]) * camera_zoom
-    root_bone.scale_x *= camera_zoom
-    root_bone.scale_y *= camera_zoom
+    root_bone.size_x *= camera_zoom
+    root_bone.size_y *= camera_zoom
     
     # First Pass: Draw all images sorted by z_index
     flat_bones = get_flat_bone_list(root_bone)
@@ -408,8 +426,8 @@ def render_scene(surface, root_bone, camera_pan, camera_zoom, selected_bone, mod
     # Restore root
     root_bone.x = orig_x
     root_bone.y = orig_y
-    root_bone.scale_x = orig_sx
-    root_bone.scale_y = orig_sy
+    root_bone.size_x = orig_size_x
+    root_bone.size_y = orig_size_y
     
     # UI Overlay (Timeline)
     if time_info:

@@ -24,8 +24,8 @@ def load_scene_from_toml(filepath):
         bone.x = b_data.get('x', 0.0)
         bone.y = b_data.get('y', 0.0)
         bone.rotation = b_data.get('rotation', 0.0)
-        bone.scale_x = b_data.get('scale_x', 1.0)
-        bone.scale_y = b_data.get('scale_y', 1.0)
+        bone.size_x = b_data.get('size_x', 1.0)
+        bone.size_y = b_data.get('size_y', 1.0)
         
         if 'pivot_x' in b_data: bone.pivot_x = b_data['pivot_x']
         if 'pivot_y' in b_data: bone.pivot_y = b_data['pivot_y']
@@ -77,8 +77,8 @@ def load_scene_from_toml(filepath):
                     'x': state.get('x', b.x),
                     'y': state.get('y', b.y),
                     'rot': state.get('rotation', b.rotation),
-                    'sx': state.get('scale_x', b.scale_x),
-                    'sy': state.get('scale_y', b.scale_y)
+                    'sx': state.get('size_x', b.size_x),
+                    'sy': state.get('size_y', b.size_y)
                 }
                 easing_type = state.get('easing', EASING_DEFAULT) # Load easing type
                 animation.keyframes.append(Keyframe(time, bone_name, kf_state, easing_type))
@@ -106,8 +106,8 @@ def save_scene_to_toml(filepath, root_bone, animation):
             "x": float(bone.x),
             "y": float(bone.y),
             "rotation": float(bone.rotation),
-            "scale_x": float(bone.scale_x),
-            "scale_y": float(bone.scale_y),
+            "size_x": float(bone.size_x),
+            "size_y": float(bone.size_y),
             "pivot_x": float(bone.pivot_x),
             "pivot_y": float(bone.pivot_y),
             "color": list(bone.color)
@@ -168,8 +168,8 @@ def save_scene_to_json(filepath, root_bone, animation):
             "x": float(bone.x),
             "y": float(bone.y),
             "rotation": float(bone.rotation),
-            "scale_x": float(bone.scale_x),
-            "scale_y": float(bone.scale_y),
+            "size_x": float(bone.size_x),
+            "size_y": float(bone.size_y),
             "pivot_x": float(bone.pivot_x),
             "pivot_y": float(bone.pivot_y),
             "color": list(bone.color)
@@ -318,8 +318,8 @@ def save_scene_to_godot(filepath, root_bone, animation):
                 f.write(f'[node name="{bone.name}" type="Bone2D" parent="{parent_path}"]\n')
                 f.write(f'position = Vector2({bone.x}, {bone.y})\n')
                 f.write(f'rotation = {math.radians(bone.rotation):.4f}\n')
-                f.write(f'scale = Vector2({bone.scale_x}, {bone.scale_y})\n')
-                f.write(f'rest = Transform2D({bone.scale_x}, 0, 0, {bone.scale_y}, {bone.x}, {bone.y})\n\n')
+                f.write(f'scale = Vector2({bone.size_x}, {bone.size_y})\n')
+                f.write(f'rest = Transform2D({bone.size_x}, 0, 0, {bone.size_y}, {bone.x}, {bone.y})\n\n')
                 
                 if bone.image_path and bone.image_path in img_res_map:
                      res_id = img_res_map[bone.image_path][0]
@@ -363,8 +363,8 @@ def save_scene_to_spine_json(filepath, root_bone, animation):
         b_data["x"] = b.x
         b_data["y"] = b.y
         b_data["rotation"] = b.rotation
-        b_data["scaleX"] = b.scale_x
-        b_data["scaleY"] = b.scale_y
+        b_data["scaleX"] = b.size_x
+        b_data["scaleY"] = b.size_y
         
         spine_data["bones"].append(b_data)
         
@@ -445,7 +445,7 @@ def save_scene_to_standalone_python(filepath, root_bone, animation):
             "name": bone.name,
             "x": float(bone.x), "y": float(bone.y),
             "rotation": float(bone.rotation),
-            "scale_x": float(bone.scale_x), "scale_y": float(bone.scale_y),
+            "size_x": float(bone.size_x), "size_y": float(bone.size_y),
             "pivot_x": float(bone.pivot_x), "pivot_y": float(bone.pivot_y)
         }
         if bone.parent: b_data["parent"] = bone.parent.name
@@ -523,8 +523,8 @@ class Bone:
         self.x = 0.0
         self.y = 0.0
         self.rotation = 0.0
-        self.scale_x = 1.0
-        self.scale_y = 1.0
+        self.size_x = 1.0
+        self.size_y = 1.0
         self.pivot_x = 0.0
         self.pivot_y = 0.0
         
@@ -542,9 +542,9 @@ class Bone:
             sin_a = math.sin(rad)
             wx = px + (lx * cos_a - ly * sin_a)
             wy = py + (lx * sin_a + ly * cos_a)
-            return wx, wy, prot + self.rotation, psx * self.scale_x, psy * self.scale_y
+            return wx, wy, prot + self.rotation, psx * self.size_x, psy * self.size_y
         else:
-            return self.x, self.y, self.rotation, self.scale_x, self.scale_y
+            return self.x, self.y, self.rotation, self.size_x, self.size_y
 
     def draw(self, surface):
         wx, wy, wrot, wsx, wsy = self.get_world_transform()
@@ -647,8 +647,8 @@ class Animation:
             while diff > 180: diff -= 360
             b.rotation = p['rot'] + diff * eased_t
             
-            b.scale_x = p['sx'] + (n['sx'] - p['sx']) * eased_t
-            b.scale_y = p['sy'] + (n['sy'] - p['sy']) * eased_t
+            b.size_x = p['sx'] + (n['sx'] - p['sx']) * eased_t
+            b.size_y = p['sy'] + (n['sy'] - p['sy']) * eased_t
 
 # --- Setup ---
 def load_scene(data):
@@ -663,8 +663,8 @@ def load_scene(data):
         bone.x = b_data.get('x', 0)
         bone.y = b_data.get('y', 0)
         bone.rotation = b_data.get('rotation', 0)
-        bone.scale_x = b_data.get('scale_x', 1)
-        bone.scale_y = b_data.get('scale_y', 1)
+        bone.size_x = b_data.get('size_x', 1)
+        bone.size_y = b_data.get('size_y', 1)
         if 'pivot_x' in b_data: bone.pivot_x = b_data['pivot_x']
         if 'pivot_y' in b_data: bone.pivot_y = b_data['pivot_y']
         bone_map[name] = bone

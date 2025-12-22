@@ -1,0 +1,254 @@
+[[bones]]
+name = "Body"
+x = 0.0
+y = 0.0
+rotation = 0.0
+size_x = 60.0
+size_y = 120.0
+pivot_x = 0.0
+pivot_y = 0.0
+alpha = 255.0
+color = [ 255, 100, 100,]
+image = "assets/torso.png"
+
+[[bones]]
+name = "LeftArm"
+x = -40.0
+y = 30.0
+rotation = 0.0
+size_x = 35.0
+size_y = 90.0
+pivot_x = 0.0
+pivot_y = -45.0
+alpha = 255.0
+color = [ 100, 255, 100,]
+parent = "Body"
+image = "assets/limb.png"
+
+[[bones]]
+name = "RightArm"
+x = 40.0
+y = 30.0
+rotation = 0.0
+size_x = 35.0
+size_y = 90.0
+pivot_x = 0.0
+pivot_y = -45.0
+alpha = 255.0
+color = [ 100, 255, 100,]
+parent = "Body"
+image = "assets/limb.png"
+
+[[bones]]
+name = "Head"
+x = 0.0
+y = -70.0
+rotation = 0.0
+size_x = 50.0
+size_y = 50.0
+pivot_x = 0.0
+pivot_y = 0.0
+alpha = 255.0
+color = [ 255, 200, 100,]
+parent = "Body"
+image = "assets/torso.png"
+
+[meta]
+duration = 8.0
+loop = true
+
+[animations]
+[[animations.keyframes]]
+time = 0.0
+
+[animations.keyframes.bones.Body]
+x = 0.0
+y = 0.0
+rot = 0.0
+size_x = 60.0
+size_y = 120.0
+alpha = 255.0
+easing = "linear"
+
+[animations.keyframes.bones.LeftArm]
+x = -40.0
+y = 30.0
+rot = 0.0
+size_x = 35.0
+size_y = 90.0
+alpha = 255.0
+easing = "linear"
+
+[animations.keyframes.bones.RightArm]
+x = 40.0
+y = 30.0
+rot = 0.0
+size_x = 35.0
+size_y = 90.0
+alpha = 255.0
+easing = "linear"
+
+[animations.keyframes.bones.Head]
+x = 0.0
+y = -70.0
+rot = 0.0
+size_x = 50.0
+size_y = 50.0
+alpha = 255.0
+easing = "linear"
+
+[[animations.keyframes]]
+time = 2.0
+
+[animations.keyframes.bones.Body]
+x = 0.0
+y = 0.0
+rot = 0.0
+size_x = 60.0
+size_y = 120.0
+alpha = 255.0
+easing = "ease_out_cubic"
+
+[animations.keyframes.bones.LeftArm]
+x = -40.0
+y = 30.0
+rot = 45.0
+size_x = 35.0
+size_y = 90.0
+alpha = 255.0
+easing = "ease_out_cubic"
+
+[animations.keyframes.bones.RightArm]
+x = 40.0
+y = 30.0
+rot = -45.0
+size_x = 35.0
+size_y = 90.0
+alpha = 255.0
+easing = "ease_out_cubic"
+
+[animations.keyframes.bones.Head]
+x = 0.0
+y = -70.0
+rot = 0.0
+size_x = 50.0
+size_y = 50.0
+alpha = 255.0
+easing = "ease_out_cubic"
+
+[[animations.keyframes]]
+time = 4.0
+
+[animations.keyframes.bones.Body]
+x = 0.0
+y = 0.0
+rot = 0.0
+size_x = 60.0
+size_y = 120.0
+alpha = 255.0
+easing = "ease_in_cubic"
+
+[animations.keyframes.bones.LeftArm]
+x = -40.0
+y = 30.0
+rot = 90.0
+size_x = 35.0
+size_y = 90.0
+alpha = 255.0
+easing = "ease_in_cubic"
+
+[animations.keyframes.bones.RightArm]
+x = 40.0
+y = 30.0
+rot = -90.0
+size_x = 35.0
+size_y = 90.0
+alpha = 255.0
+easing = "ease_in_cubic"
+
+[animations.keyframes.bones.Head]
+x = 0.0
+y = -70.0
+rot = 0.0
+size_x = 50.0
+size_y = 50.0
+alpha = 255.0
+easing = "ease_in_cubic"
+
+[[animations.keyframes]]
+time = 6.0
+
+[animations.keyframes.bones.Body]
+x = 0.0
+y = 0.0
+rot = 0.0
+size_x = 60.0
+size_y = 120.0
+alpha = 255.0
+easing = "ease_out_cubic"
+
+[animations.keyframes.bones.LeftArm]
+x = -40.0
+y = 30.0
+rot = 45.0
+size_x = 35.0
+size_y = 90.0
+alpha = 255.0
+easing = "ease_out_cubic"
+
+[animations.keyframes.bones.RightArm]
+x = 40.0
+y = 30.0
+rot = -45.0
+size_x = 35.0
+size_y = 90.0
+alpha = 255.0
+easing = "ease_out_cubic"
+
+[animations.keyframes.bones.Head]
+x = 0.0
+y = -70.0
+rot = 0.0
+size_x = 50.0
+size_y = 50.0
+alpha = 255.0
+easing = "ease_out_cubic"
+
+[[animations.keyframes]]
+time = 8.0
+
+[animations.keyframes.bones.Body]
+x = 0.0
+y = 0.0
+rot = 0.0
+size_x = 60.0
+size_y = 120.0
+alpha = 255.0
+easing = "linear"
+
+[animations.keyframes.bones.LeftArm]
+x = -40.0
+y = 30.0
+rot = 0.0
+size_x = 35.0
+size_y = 90.0
+alpha = 255.0
+easing = "linear"
+
+[animations.keyframes.bones.RightArm]
+x = 40.0
+y = 30.0
+rot = 0.0
+size_x = 35.0
+size_y = 90.0
+alpha = 255.0
+easing = "linear"
+
+[animations.keyframes.bones.Head]
+x = 0.0
+y = -70.0
+rot = 0.0
+size_x = 50.0
+size_y = 50.0
+alpha = 255.0
+easing = "linear"

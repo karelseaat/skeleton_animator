@@ -94,7 +94,7 @@ def get_bone_state(bone):
     return {
         'x': bone.x, 'y': bone.y,
         'rotation': bone.rotation,
-        'scale_x': bone.scale_x, 'scale_y': bone.scale_y,
+        'size_x': bone.size_x, 'size_y': bone.size_y,
         'pivot_x': bone.pivot_x, 'pivot_y': bone.pivot_y,
         'z_index': bone.z_index
     }
@@ -145,7 +145,7 @@ def main():
     # Property Editing State
     # Index maps to properties in editable_props list
     focused_prop_idx = 0 
-    editable_props = ["x", "y", "rotation", "scale_x", "scale_y", "pivot_x", "pivot_y", "z_index"]
+    editable_props = ["x", "y", "rotation", "size_x", "size_y", "pivot_x", "pivot_y", "z_index"]
     
     # Unique ID counter
     bone_counter = 1
@@ -250,7 +250,7 @@ def main():
                         if pygame.key.get_mods() & pygame.KMOD_SHIFT:
                             delta *= 10.0
                         
-                        if prop_name in ["scale_x", "scale_y"]:
+                        if prop_name in ["size_x", "size_y"]:
                             delta *= 0.1 # Slower for scale
                         elif prop_name == "z_index":
                             delta = 1 if event.key == pygame.K_UP else -1 # Integer steps
@@ -312,7 +312,7 @@ def main():
                         
                         state = {
                             'x': selected_bone.x, 'y': selected_bone.y, 'rot': selected_bone.rotation,
-                            'sx': selected_bone.scale_x, 'sy': selected_bone.scale_y
+                            'sx': selected_bone.size_x, 'sy': selected_bone.size_y
                         }
                         new_kf = Keyframe(current_time, selected_bone.name, state, kf_easing)
                         
@@ -493,8 +493,8 @@ def main():
                         # Drag X -> Scale X, Drag Y -> Scale Y
                         # Scale Factor: Moving right/up increases, left/down decreases
                         sens = 0.01
-                        selected_bone.scale_x += dx * sens
-                        selected_bone.scale_y -= dy * sens # Y is inverted on screen
+                        selected_bone.size_x += dx * sens
+                        selected_bone.size_y -= dy * sens # Y is inverted on screen
 
         last_mouse_pos = (mx, my)
 
@@ -554,8 +554,8 @@ def main():
                 "x": selected_bone.x,
                 "y": selected_bone.y,
                 "rotation": selected_bone.rotation,
-                "scale_x": selected_bone.scale_x,
-                "scale_y": selected_bone.scale_y,
+                "size_x": selected_bone.size_x,
+                "size_y": selected_bone.size_y,
                 "pivot_x": selected_bone.pivot_x,
                 "pivot_y": selected_bone.pivot_y,
                 "z_index": selected_bone.z_index,
@@ -563,7 +563,7 @@ def main():
 
             prop_labels = {
                 "x": "X", "y": "Y", "rotation": "Rot",
-                "scale_x": "Scale X", "scale_y": "Scale Y",
+                "size_x": "Scale X", "size_y": "Scale Y",
                 "pivot_x": "Pivot X", "pivot_y": "Pivot Y",
                 "z_index": "Z-Index"
             }
