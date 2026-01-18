@@ -32,11 +32,15 @@ class Bone:
         
         # Size in pixels (actual display size, not scale)
         if self.original_image:
-            self.size_x = float(self.original_image.get_width())
-            self.size_y = float(self.original_image.get_height())
+            self.base_width = float(self.original_image.get_width())
+            self.base_height = float(self.original_image.get_height())
+            self.size_x = self.base_width
+            self.size_y = self.base_height
         else:
-            self.size_x = 1.0
-            self.size_y = 1.0
+            self.base_width = 100.0 # Default visual size for non-image bones
+            self.base_height = 100.0
+            self.size_x = 100.0
+            self.size_y = 100.0
         
         # Pivot point: 0 = middle, -(size/2) = top-left, +(size/2) = bottom-right
         self.pivot_x = 0.0
@@ -54,14 +58,31 @@ class Bone:
     def get_world_transform(self):
         """
         Calculates the world position and rotation.
-        Returns (x, y, rotation_degrees, size_x, size_y)
+        Returns (x, y, rotation_degrees, scale_x, scale_y)
         """
+        # Calculate Local Scale Ratio
+        local_scale_x = 1.0
+        local_scale_y = 1.0
+        
+        # Ensure base_width/height exist (handle legacy objects at runtime)
+        if not hasattr(self, 'base_width'):
+            if self.original_image:
+                self.base_width = float(self.original_image.get_width())
+                self.base_height = float(self.original_image.get_height())
+            else:
+                self.base_width = 1.0
+                self.base_height = 1.0
+
+        if self.base_width > 0: local_scale_x = self.size_x / self.base_width
+        if self.base_height > 0: local_scale_y = self.size_y / self.base_height
+        
+
         if self.parent:
-            px, py, prot, _, _ = self.parent.get_world_transform()
+            px, py, prot, psx, psy = self.parent.get_world_transform()
             
-            # Local position is not scaled - absolute pixel positions
-            lx = self.x
-            ly = self.y
+            # Local position IS scaled by parent scale
+            lx = self.x * psx
+            ly = self.y * psy
             
             # Rotate local position by parent rotation
             rad = math.radians(prot)
@@ -71,18 +92,19 @@ class Bone:
             wx = px + (lx * cos_a - ly * sin_a)
             wy = py + (lx * sin_a + ly * cos_a)
             
-            # Size is absolute in pixels
-            return wx, wy, prot + self.rotation, self.size_x, self.size_y
+            # Return cumulative scale
+            return wx, wy, prot + self.rotation, local_scale_x * psx, local_scale_y * psy
         else:
-            return self.x, self.y, self.rotation, self.size_x, self.size_y
+            return self.x, self.y, self.rotation, local_scale_x, local_scale_y
 
     def draw_image(self, surface):
-        wx, wy, wrot, size_x, size_y = self.get_world_transform()
+        wx, wy, wrot, scale_x, scale_y = self.get_world_transform()
         
         if self.original_image:
-            # Scale image to exact size (in pixels)
-            w = int(abs(size_x))
-            h = int(abs(size_y))
+            # Reconstruct target pixel size from scale
+            w = int(abs(scale_x * self.base_width))
+            h = int(abs(scale_y * self.base_height))
+            
             if w > 0 and h > 0:
                 scaled_img = pygame.transform.scale(self.original_image, (w, h))
             else:
@@ -91,17 +113,17 @@ class Bone:
             rotated_img = pygame.transform.rotate(scaled_img, -wrot) # Pygame rotates CCW
             
             # Calculate offset due to pivot rotation
-            # Pivot is normalized: 0 = middle, -(size/2) = left/top, +(size/2) = right/bottom
-            piv_x = self.pivot_x
-            piv_y = self.pivot_y
+            # self.pivot_x is in pixels (relative to base image).
+            # When we scale the image, the pivot moves too.
+            scaled_piv_x = self.pivot_x * abs(scale_x)
+            scaled_piv_y = self.pivot_y * abs(scale_y)
             
-            # Rotate pivot vector
             rad = math.radians(wrot)
             cos_a = math.cos(rad)
             sin_a = math.sin(rad)
             
-            rot_piv_x = piv_x * cos_a - piv_y * sin_a
-            rot_piv_y = piv_x * sin_a + piv_y * cos_a
+            rot_piv_x = scaled_piv_x * cos_a - scaled_piv_y * sin_a
+            rot_piv_y = scaled_piv_x * sin_a + scaled_piv_y * cos_a
             
             # Position = world pos - rotated pivot + rect correction
             rect = rotated_img.get_rect()
@@ -352,116 +374,3 @@ def get_keyframe_at_pos(animation, mx, my, duration, root_bone):
             closest_keyframe = k
     
     return closest_keyframe
-def render_scene(surface, root_bone, camera_pan, camera_zoom, selected_bone, mode, time_info=None, draw_bones=True, background_image=None):
-    """
-    Draws the entire scene to the provided surface.
-    time_info: tuple (current_time, duration) for drawing timeline
-    """
-    surface.fill(BG_COLOR)
-    
-    # Draw Reference Background (World Space)
-    if background_image:
-        # Calculate screen position for background (0,0 world)
-        bg_x = camera_pan[0] * camera_zoom
-        bg_y = camera_pan[1] * camera_zoom
-        
-        # Scale background
-        # Note: This scales the original image every frame which is slow.
-        # Optimization: Cache scaled image if zoom changes, but for MVP dynamic scaling is okay.
-        # Or better: use transform.scale on blit if supported, or rotate/zoom.
-        # Pygame blit doesn't scale. We must scale surface.
-        
-        orig_w = background_image.get_width()
-        orig_h = background_image.get_height()
-        new_w = int(orig_w * camera_zoom)
-        new_h = int(orig_h * camera_zoom)
-        
-        # Only draw if reasonable size
-        if new_w > 0 and new_h > 0:
-            scaled_bg = pygame.transform.scale(background_image, (new_w, new_h))
-            surface.blit(scaled_bg, (bg_x, bg_y))
-    
-    # Grid
-    grid_sz = int(50 * camera_zoom)
-    if grid_sz < 10: grid_sz = 10 # Prevent infinite loop or dense grid
-    
-    # Grid Offset needs to scale too
-    off_x = (camera_pan[0] * camera_zoom) % grid_sz
-    off_y = (camera_pan[1] * camera_zoom) % grid_sz
-    
-    w, h = surface.get_size()
-    
-    for i in range(0, w, grid_sz):
-        pygame.draw.line(surface, GRID_COLOR, (i + off_x - grid_sz, 0), (i + off_x - grid_sz, h - TIMELINE_HEIGHT))
-    for i in range(0, h - TIMELINE_HEIGHT, grid_sz):
-        pygame.draw.line(surface, GRID_COLOR, (0, i + off_y - grid_sz), (w, i + off_y - grid_sz))
-
-    # HACK: Temporarily modify root pos for drawing to apply Camera Transform
-    orig_x, orig_y = root_bone.x, root_bone.y
-    orig_size_x, orig_size_y = root_bone.size_x, root_bone.size_y
-    
-    # Apply Pan and Zoom
-    root_bone.x = (root_bone.x + camera_pan[0]) * camera_zoom
-    root_bone.y = (root_bone.y + camera_pan[1]) * camera_zoom
-    root_bone.size_x *= camera_zoom
-    root_bone.size_y *= camera_zoom
-    
-    # First Pass: Draw all images sorted by z_index
-    flat_bones = get_flat_bone_list(root_bone)
-    # Sort bones by z_index (ascending)
-    flat_bones.sort(key=lambda b: b.z_index)
-    
-    for bone in flat_bones:
-        bone.draw_image(surface)
-
-    # Second Pass: Draw all debug elements (bone lines, nodes, pivots) on top
-    if draw_bones:
-        def recursive_draw_debug(bone):
-            bone.draw_debug_elements(surface, selected_bone=selected_bone, mode=mode)
-            for child in bone.children:
-                recursive_draw_debug(child)
-        recursive_draw_debug(root_bone)
-    
-    # Restore root
-    root_bone.x = orig_x
-    root_bone.y = orig_y
-    root_bone.size_x = orig_size_x
-    root_bone.size_y = orig_size_y
-    
-    # UI Overlay (Timeline)
-    if time_info:
-        curr, dur = time_info
-        pygame.draw.rect(surface, TIMELINE_BG, (0, h - TIMELINE_HEIGHT, w, TIMELINE_HEIGHT))
-        
-        # Draw time markers with vertical lines
-        if dur > 0:
-            # Calculate time interval (0.1, 0.2, 0.5, 1.0 depending on duration)
-            if dur <= 1.0:
-                time_interval = 0.1
-            elif dur <= 2.0:
-                time_interval = 0.25
-            elif dur <= 5.0:
-                time_interval = 0.5
-            else:
-                time_interval = 1.0
-            
-            time_marker = 0
-            while time_marker <= dur + 0.01:  # Small epsilon for floating point
-                # Account for left margin
-                x = TIMELINE_LEFT_MARGIN + (time_marker / dur) * (w - TIMELINE_LEFT_MARGIN)
-                
-                # Major tick (full height)
-                pygame.draw.line(surface, (100, 100, 100), (x, h - TIMELINE_HEIGHT), (x, h - TIMELINE_HEIGHT + 15), 1)
-                
-                # Time label for major ticks
-                if time_marker % 1.0 < 0.01 or time_marker % 1.0 > 0.99:  # Every 1 second
-                    font_small = pygame.font.SysFont('Arial', 10)
-                    time_text = font_small.render(f'{time_marker:.1f}s', True, (150, 150, 150))
-                    surface.blit(time_text, (int(x) - 10, h - TIMELINE_HEIGHT + 16))
-                
-                time_marker += time_interval
-        
-        # Playhead
-        if dur > 0:
-            ph_x = TIMELINE_LEFT_MARGIN + (curr / dur) * (w - TIMELINE_LEFT_MARGIN)
-            pygame.draw.line(surface, (255, 0, 0), (ph_x, h - TIMELINE_HEIGHT), (ph_x, h), 2)

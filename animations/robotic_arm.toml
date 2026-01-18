@@ -3,25 +3,25 @@ name = "Base"
 x = 0.0
 y = 200.0
 rotation = 0.0
-size_x = 1.0
-size_y = 1.0
-pivot_x = 64.0
-pivot_y = 64.0
+size_x = 80.0
+size_y = 40.0
+pivot_x = 0.0
+pivot_y = 0.0
 alpha = 255.0
-color = [ 100, 100, 100,]
+color = [255, 100, 255]
 image = "assets/robot_base.png"
 
 [[bones]]
 name = "Joint1"
 x = 0.0
-y = -50.0
+y = -20.0
 rotation = 0.0
-size_x = 1.0
-size_y = 1.0
-pivot_x = 32.0
-pivot_y = 32.0
+size_x = 40.0
+size_y = 40.0
+pivot_x = 0.0
+pivot_y = 0.0
 alpha = 255.0
-color = [ 150, 150, 150,]
+color = [100, 100, 255]
 parent = "Base"
 image = "assets/robot_joint.png"
 
@@ -30,26 +30,26 @@ name = "Arm1"
 x = 0.0
 y = 0.0
 rotation = -45.0
-size_x = 1.0
-size_y = 1.0
-pivot_x = 20.0
-pivot_y = 120.0
+size_x = 30.0
+size_y = 120.0
+pivot_x = 0.0
+pivot_y = 50.0
 alpha = 255.0
-color = [ 200, 200, 200,]
+color = [255, 100, 255]
 parent = "Joint1"
 image = "assets/robot_arm_segment.png"
 
 [[bones]]
 name = "Joint2"
 x = 0.0
-y = -100.0
+y = -110.0
 rotation = 0.0
-size_x = 0.8
-size_y = 0.8
-pivot_x = 32.0
-pivot_y = 32.0
+size_x = 40.0
+size_y = 40.0
+pivot_x = 0.0
+pivot_y = 0.0
 alpha = 255.0
-color = [ 150, 150, 150,]
+color = [255, 100, 100]
 parent = "Arm1"
 image = "assets/robot_joint.png"
 
@@ -58,71 +58,45 @@ name = "Arm2"
 x = 0.0
 y = 0.0
 rotation = 90.0
-size_x = 0.8
-size_y = 0.8
-pivot_x = 20.0
-pivot_y = 120.0
+size_x = 30.0
+size_y = 120.0
+pivot_x = 0.0
+pivot_y = 50.0
 alpha = 255.0
-color = [ 200, 200, 200,]
+color = [100, 255, 255]
 parent = "Joint2"
 image = "assets/robot_arm_segment.png"
 
 [[bones]]
 name = "Claw"
 x = 0.0
-y = -100.0
+y = -110.0
 rotation = 0.0
-size_x = 1.0
-size_y = 1.0
-pivot_x = 32.0
-pivot_y = 10.0
+size_x = 40.0
+size_y = 60.0
+pivot_x = 0.0
+pivot_y = 30.0
 alpha = 255.0
-color = [ 255, 50, 50,]
+color = [100, 255, 255]
 parent = "Arm2"
 image = "assets/robot_claw.png"
 
 [meta]
-duration = 4.0
+duration = 2.0
 loop = true
 
 [animations]
 [[animations.keyframes]]
 time = 0.0
+[animations.keyframes.bones.Base]
+rot = 0.0
 [animations.keyframes.bones.Joint1]
 rot = 0.0
 [animations.keyframes.bones.Arm1]
 rot = -45.0
+[animations.keyframes.bones.Joint2]
+rot = 0.0
 [animations.keyframes.bones.Arm2]
 rot = 90.0
 [animations.keyframes.bones.Claw]
 rot = 0.0
-
-[[animations.keyframes]]
-time = 2.0
-[animations.keyframes.bones.Joint1]
-rot = 0.0
-easing = "in_out_quint"
-[animations.keyframes.bones.Arm1]
-rot = 45.0
-easing = "in_out_quint"
-[animations.keyframes.bones.Arm2]
-rot = -45.0
-easing = "in_out_quint"
-[animations.keyframes.bones.Claw]
-rot = 180.0
-easing = "in_out_quint"
-
-[[animations.keyframes]]
-time = 4.0
-[animations.keyframes.bones.Joint1]
-rot = 0.0
-easing = "in_out_quint"
-[animations.keyframes.bones.Arm1]
-rot = -45.0
-easing = "in_out_quint"
-[animations.keyframes.bones.Arm2]
-rot = 90.0
-easing = "in_out_quint"
-[animations.keyframes.bones.Claw]
-rot = 360.0
-easing = "in_out_quint"

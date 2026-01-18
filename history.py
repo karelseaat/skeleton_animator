@@ -19,6 +19,12 @@ class HistoryManager:
             self.undo_stack.pop(0) # Remove oldest command
         print(f"Action pushed: {type(command).__name__}")
 
+    def can_undo(self):
+        return len(self.undo_stack) > 0
+
+    def can_redo(self):
+        return len(self.redo_stack) > 0
+
     def undo(self):
         if not self.undo_stack:
             print("Nothing to undo.")

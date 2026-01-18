@@ -1,11 +1,13 @@
 import pygame
 import sys
 import math
+import os
 from tkinter import filedialog, Tk
 
 # Local Modules
 from constants import *
-from engine import Bone, Animation, render_scene, get_bone_at_pos, get_keyframe_at_pos, get_flat_bone_list, Keyframe
+from engine import Bone, Animation, get_bone_at_pos, get_keyframe_at_pos, get_flat_bone_list, Keyframe
+from renderer import Renderer
 from serializers import (
     load_scene_from_toml, 
     save_scene_to_toml, 
@@ -26,69 +28,6 @@ from history import HistoryManager, TransformBoneCommand, AddOrReplaceKeyframeCo
 root_tk = Tk()
 root_tk.withdraw()
 
-# Map Intensity Suffix -> Color
-EASING_INTENSITY_COLORS = {
-    "linear": (200, 200, 200), # Gray
-    "quad":   (255, 255, 0),   # Yellow
-    "cubic":  (255, 150, 0),   # Orange
-    "quart":  (255, 50, 50),   # Red
-    "quint":  (200, 0, 255),   # Purple
-}
-
-def draw_keyframe_marker(surface, x, y, fill_color, easing_type):
-    """
-    Draws a keyframe marker.
-    Shape = Direction (Linear=Circle, In=TriRight, Out=TriLeft, InOut=Diamond)
-    Border Color = Intensity (Quad, Cubic, Quart, Quint)
-    """
-    size = 5 # Make it a bit smaller for border
-    
-    # 1. Determine Intensity Color
-    border_color = EASING_INTENSITY_COLORS["linear"] # Default
-    
-    if "quint" in easing_type: border_color = EASING_INTENSITY_COLORS["quint"]
-    elif "quart" in easing_type: border_color = EASING_INTENSITY_COLORS["quart"]
-    elif "cubic" in easing_type: border_color = EASING_INTENSITY_COLORS["cubic"]
-    elif "quad" in easing_type: border_color = EASING_INTENSITY_COLORS["quad"]
-    
-    # 2. Draw Shape based on Direction
-    if easing_type == "linear":
-        pygame.draw.circle(surface, fill_color, (int(x), int(y)), size)
-        pygame.draw.circle(surface, border_color, (int(x), int(y)), size + 2, 2) # Border is 2px wider
-        
-    elif easing_type.startswith("in_out_"):
-        # Diamond
-        points = [
-            (x, y - size - 1),
-            (x + size + 1, y),
-            (x, y + size + 1),
-            (x - size - 1, y)
-        ]
-        pygame.draw.polygon(surface, fill_color, points)
-        pygame.draw.polygon(surface, border_color, points, 2)
-        
-    elif easing_type.startswith("in_"):
-        # Triangle pointing Right >
-        points = [
-            (x - size + 1, y - size - 1),
-            (x + size + 1, y),
-            (x - size + 1, y + size + 1)
-        ]
-        pygame.draw.polygon(surface, fill_color, points)
-        pygame.draw.polygon(surface, border_color, points, 2)
-        
-    elif easing_type.startswith("out_"):
-        # Triangle pointing Left <
-        points = [
-            (x + size - 1, y - size - 1),
-            (x - size - 1, y),
-            (x + size - 1, y + size + 1)
-        ]
-        pygame.draw.polygon(surface, fill_color, points)
-        pygame.draw.polygon(surface, border_color, points, 2)
-    else: # Fallback to Circle
-        pygame.draw.circle(surface, fill_color, (int(x), int(y)), size)
-        pygame.draw.circle(surface, border_color, (int(x), int(y)), size + 2, 2) # Border is 2px wider
 
 def get_bone_state(bone):
     return {
@@ -111,14 +50,31 @@ def main():
     font_title = pygame.font.SysFont('Arial', 24, bold=True)
     font_help = pygame.font.SysFont('Arial', 16) # Smaller help font
 
+    renderer = Renderer(screen)
+
     # State
     camera_pan = [SCREEN_WIDTH//2, SCREEN_HEIGHT//2]
     camera_zoom = 1.0
     
-    root_bone = Bone("Root")
-    root_bone.x = 0
-    root_bone.y = 0
+    # Load default scene if exists
+    root_bone = None
+    animation = None
     
+    default_scene_path = os.path.join("animations", "character_animation.toml")
+    if os.path.exists(default_scene_path):
+        print(f"Loading default scene from {default_scene_path}")
+        loaded_root, loaded_anim = load_scene_from_toml(default_scene_path)
+        if loaded_root:
+            root_bone = loaded_root
+            animation = loaded_anim
+            print("Loaded scene successfully.")
+            
+    if root_bone is None:
+        root_bone = Bone("Root")
+        root_bone.x = 0
+        root_bone.y = 0
+        animation = Animation()
+
     selected_bone = root_bone
     
     # Background Image State
@@ -129,7 +85,6 @@ def main():
     show_bones = True
     show_help = False # Help overlay state
     
-    animation = Animation()
     current_time = 0.0
     is_playing = False
     
@@ -543,8 +498,7 @@ def main():
             animation.apply(current_time, root_bone)
 
         # --- Drawing ---
-        main_scene_surface = screen.subsurface((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
-        render_scene(main_scene_surface, root_bone, camera_pan, camera_zoom, selected_bone, mode, (current_time, animation.duration), show_bones, bg_image)
+        renderer.render_scene(root_bone, camera_pan, camera_zoom, selected_bone, mode, (current_time, animation.duration), show_bones, bg_image)
         
         # Draw Properties Panel
         panel_rect = pygame.Rect(SCREEN_WIDTH, 0, PROPERTIES_PANEL_WIDTH, SCREEN_HEIGHT)
@@ -693,7 +647,7 @@ def main():
                 fill_color = bone_obj.color if bone_obj else (100, 150, 255) # Fill with bone color
                 
                 # Draw marker based on easing type using the helper function
-                draw_keyframe_marker(screen, kx, ky, fill_color, k.easing_type)
+                renderer.draw_keyframe_marker(kx, ky, fill_color, k.easing_type)
                 
                 # Draw selection box around selected keyframe
                 if selected_keyframe == k:

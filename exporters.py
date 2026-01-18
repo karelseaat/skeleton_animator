@@ -2,7 +2,7 @@ import pygame
 import imageio
 import math
 import numpy as np
-from engine import render_scene
+from renderer import Renderer
 from constants import *
 
 def capture_animation_frames(root_bone, animation, camera_pan, fps=30):
@@ -13,13 +13,14 @@ def capture_animation_frames(root_bone, animation, camera_pan, fps=30):
     print(f"Capturing {steps} frames...")
     
     temp_screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    renderer = Renderer(temp_screen)
     
     for i in range(steps):
         t = (i / fps)
         animation.apply(t, root_bone)
         
         # Render without UI selection highlights and without bones
-        render_scene(temp_screen, root_bone, camera_pan, 1.0, None, "NONE", time_info=None, draw_bones=False)
+        renderer.render_scene(root_bone, camera_pan, 1.0, None, "NONE", time_info=None, draw_bones=False)
         
         # Capture - We crop out the timeline at the bottom
         view = pygame.surfarray.array3d(temp_screen)

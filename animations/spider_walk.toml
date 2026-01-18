@@ -3,100 +3,84 @@ name = "Body"
 x = 0.0
 y = 0.0
 rotation = 0.0
-size_x = 1.0
-size_y = 1.0
-pivot_x = 64.0
-pivot_y = 64.0
+size_x = 80.0
+size_y = 80.0
+pivot_x = 0.0
+pivot_y = 0.0
 alpha = 255.0
-color = [ 50, 50, 50,]
+color = [100, 255, 100]
 image = "assets/spider_body.png"
 
 [[bones]]
 name = "Leg_L1_Upper"
-x = -40.0
+x = -30.0
 y = -20.0
 rotation = -30.0
-size_x = 1.0
-size_y = 1.0
-pivot_x = 10.0
-pivot_y = 10.0
-color = [ 100, 20, 20,]
+size_x = 10.0
+size_y = 60.0
+pivot_x = 0.0
+pivot_y = 25.0
+alpha = 255.0
+color = [100, 255, 255]
 parent = "Body"
 image = "assets/spider_leg_upper.png"
 
 [[bones]]
 name = "Leg_L1_Lower"
-x = -50.0
-y = -10.0
+x = 0.0
+y = -55.0
 rotation = 45.0
-size_x = 1.0
-size_y = 1.0
-pivot_x = 5.0
-pivot_y = 5.0
-color = [ 150, 40, 40,]
+size_x = 8.0
+size_y = 50.0
+pivot_x = 0.0
+pivot_y = 20.0
+alpha = 255.0
+color = [255, 255, 100]
 parent = "Leg_L1_Upper"
 image = "assets/spider_leg_lower.png"
 
 [[bones]]
 name = "Leg_R1_Upper"
-x = 40.0
+x = 30.0
 y = -20.0
 rotation = 30.0
-size_x = 1.0
-size_y = 1.0
-pivot_x = 10.0
-pivot_y = 10.0
-color = [ 100, 20, 20,]
+size_x = 10.0
+size_y = 60.0
+pivot_x = 0.0
+pivot_y = 25.0
+alpha = 255.0
+color = [255, 100, 100]
 parent = "Body"
 image = "assets/spider_leg_upper.png"
 
 [[bones]]
 name = "Leg_R1_Lower"
-x = 50.0
-y = -10.0
+x = 0.0
+y = -55.0
 rotation = -45.0
-size_x = 1.0
-size_y = 1.0
-pivot_x = 5.0
-pivot_y = 5.0
-color = [ 150, 40, 40,]
+size_x = 8.0
+size_y = 50.0
+pivot_x = 0.0
+pivot_y = 20.0
+alpha = 255.0
+color = [100, 255, 100]
 parent = "Leg_R1_Upper"
 image = "assets/spider_leg_lower.png"
 
 [meta]
-duration = 1.0
+duration = 2.0
 loop = true
 
 [animations]
 [[animations.keyframes]]
 time = 0.0
 [animations.keyframes.bones.Body]
-y = 0.0
+rot = 0.0
 [animations.keyframes.bones.Leg_L1_Upper]
 rot = -30.0
+[animations.keyframes.bones.Leg_L1_Lower]
+rot = 45.0
 [animations.keyframes.bones.Leg_R1_Upper]
 rot = 30.0
-
-[[animations.keyframes]]
-time = 0.5
-[animations.keyframes.bones.Body]
-y = 5.0
-easing = "in_out_quad"
-[animations.keyframes.bones.Leg_L1_Upper]
-rot = -50.0
-easing = "in_out_cubic"
-[animations.keyframes.bones.Leg_R1_Upper]
-rot = 10.0
-easing = "in_out_cubic"
-
-[[animations.keyframes]]
-time = 1.0
-[animations.keyframes.bones.Body]
-y = 0.0
-easing = "in_out_quad"
-[animations.keyframes.bones.Leg_L1_Upper]
-rot = -30.0
-easing = "in_out_cubic"
-[animations.keyframes.bones.Leg_R1_Upper]
-rot = 30.0
-easing = "in_out_cubic"
+[animations.keyframes.bones.Leg_R1_Lower]
+rot = -45.0

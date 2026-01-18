@@ -13,6 +13,7 @@ EASING_INTENSITY_COLORS = {
 
 class Renderer:
     def __init__(self, screen):
+        # Initialized renderer
         self.screen = screen
         self.font = pygame.font.SysFont('Arial', 14)
         self.font_small = pygame.font.SysFont('Arial', 10)
@@ -38,8 +39,11 @@ class Renderer:
         
         # 2. Draw Shape based on Direction
         if easing_type == "linear":
+            # Just a simple circle for linear, no extra border ring unless it's selected (handled elsewhere)
             pygame.draw.circle(self.screen, fill_color, (int(x), int(y)), size)
-            pygame.draw.circle(self.screen, border_color, (int(x), int(y)), size + 2, 2) # Border is 2px wider
+            # Only draw border if it's NOT the default gray (meaning it has some special intensity, though linear usually doesn't)
+            if border_color != EASING_INTENSITY_COLORS["linear"]:
+                 pygame.draw.circle(self.screen, border_color, (int(x), int(y)), size + 2, 2)
             
         elif easing_type.startswith("in_out_"):
             # Diamond
@@ -125,6 +129,7 @@ class Renderer:
         # because get_world_transform converts size -> scale factor.
         root_bone.size_x *= camera_zoom
         root_bone.size_y *= camera_zoom
+        
         
         # First Pass: Draw all images sorted by z_index
         flat_bones = get_flat_bone_list(root_bone)
