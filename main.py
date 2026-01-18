@@ -156,7 +156,7 @@ def main():
                 # Actions
                 elif event.key == pygame.K_l: 
                     if pygame.key.get_mods() & pygame.KMOD_SHIFT: # Shift+L: Load Background
-                        filepath = filedialog.askopenfilename(filetypes=[("Images", "*.png;*.jpg;*.jpeg;*.bmp")])
+                        filepath = filedialog.askopenfilename(filetypes=[("Images", "*.png *.jpg *.jpeg *.bmp")])
                         if filepath:
                             try:
                                 bg_image = pygame.image.load(filepath).convert_alpha()
@@ -164,13 +164,20 @@ def main():
                             except Exception as e:
                                 print(f"Error loading background: {e}")
                     else: # L: Load Bone Image
-                        filepath = filedialog.askopenfilename(filetypes=[("Images", "*.png;*.jpg;*.jpeg;*.bmp")])
-                        if filepath:
-                            new_bone = Bone(f"Bone_{bone_counter}", filepath, parent=selected_bone)
-                            bone_counter += 1
-                            selected_bone = new_bone
-                            selected_bone.x = 50
-                            # TODO: Add command for adding/deleting bones
+                        filepath = filedialog.askopenfilename(filetypes=[("Images", "*.png *.jpg *.jpeg *.bmp")])
+                        if filepath and selected_bone:
+                            try:
+                                img = pygame.image.load(filepath).convert_alpha()
+                                selected_bone.image_path = filepath
+                                selected_bone.original_image = img
+                                selected_bone.image = img
+                                selected_bone.base_width = float(img.get_width())
+                                selected_bone.base_height = float(img.get_height())
+                                selected_bone.size_x = selected_bone.base_width
+                                selected_bone.size_y = selected_bone.base_height
+                                print(f"Updated image for bone '{selected_bone.name}': {filepath}")
+                            except Exception as e:
+                                print(f"Error loading image: {e}")
                 
                 elif event.key == pygame.K_n: # New Empty Bone
                     new_bone = Bone(f"Bone_{bone_counter}", parent=selected_bone)
@@ -689,7 +696,7 @@ def main():
                 "  Mouse Drag: Move/Rotate/Pivot/Scale",
                 "  [ / ]: Change Z-Index (Draw Order)",
                 "  Shift+L: Load Background Reference",
-                "  L: Load Image (Child)",
+                "  L: Set Image for Selected Bone",
                 "  N: New Empty Bone",
                 "  Del: Delete Bone",
             ]
