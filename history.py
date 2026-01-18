@@ -41,16 +41,21 @@ class HistoryManager:
 
 class TransformBoneCommand(Command):
     """Handles Move, Rotate, Scale, Pivot, Z-index changes for a single bone"""
-    def __init__(self, bone, old_state, new_state):
+    def __init__(self, bone, old_state, new_state, keyframe=None):
         self.bone = bone
         self.old_state = old_state # dict of {x, y, rot, sx, sy, px, py, z_index}
         self.new_state = new_state
+        self.keyframe = keyframe
 
     def execute(self):
         self._apply_state(self.new_state)
+        if self.keyframe:
+            self._update_keyframe(self.new_state)
 
     def undo(self):
         self._apply_state(self.old_state)
+        if self.keyframe:
+            self._update_keyframe(self.old_state)
 
     def _apply_state(self, state):
         self.bone.x = state['x']
@@ -61,6 +66,16 @@ class TransformBoneCommand(Command):
         self.bone.pivot_x = state['pivot_x']
         self.bone.pivot_y = state['pivot_y']
         self.bone.z_index = state['z_index']
+
+    def _update_keyframe(self, state):
+        # Map bone state keys to keyframe state keys
+        kf_state = self.keyframe.state
+        kf_state['x'] = state['x']
+        kf_state['y'] = state['y']
+        kf_state['rot'] = state['rotation']
+        kf_state['size_x'] = state['size_x']
+        kf_state['size_y'] = state['size_y']
+
 
 class AddOrReplaceKeyframeCommand(Command):
     """Adds a new keyframe, or replaces an existing one at the same time/bone"""

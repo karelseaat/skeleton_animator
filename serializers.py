@@ -81,6 +81,9 @@ def load_scene_from_toml(filepath):
                     'sy': state.get('size_y', b.size_y)
                 }
                 easing_type = state.get('easing', EASING_DEFAULT) # Load easing type
+                # Normalize legacy easing names (remove 'ease_' prefix)
+                if easing_type.startswith("ease_"):
+                    easing_type = easing_type[5:]
                 animation.keyframes.append(Keyframe(time, bone_name, kf_state, easing_type))
     
     animation.keyframes.sort(key=lambda k: k.time)

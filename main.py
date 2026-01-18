@@ -266,7 +266,16 @@ def main():
                         new_state = get_bone_state(selected_bone)
                         # Push command only if something changed
                         if any(new_state[key] != old_state[key] for key in new_state):
-                            history.push(TransformBoneCommand(selected_bone, old_state, new_state))
+                            # Check for keyframe at current time
+                            target_kf = None
+                            for k in animation.keyframes:
+                                if k.bone_name == selected_bone.name and abs(k.time - current_time) < 0.01:
+                                    target_kf = k
+                                    break
+                            
+                            command = TransformBoneCommand(selected_bone, old_state, new_state, keyframe=target_kf)
+                            command.execute() # Apply (and update KF)
+                            history.push(command)
 
                 elif event.key == pygame.K_LEFTBRACKET: # [
                     if selected_bone:
@@ -386,10 +395,21 @@ def main():
                             selected_keyframe = clicked_kf
                             dragging = "KEYFRAME"
                             dragging_keyframe = clicked_kf
+                            # Snap time to keyframe
+                            current_time = clicked_kf.time
+                            animation.apply(current_time, root_bone)
                         else:
                             selected_keyframe = None
-                            ratio = mx / SCREEN_WIDTH
+                            ratio = max(0, min(1, (mx - TIMELINE_LEFT_MARGIN) / (SCREEN_WIDTH - TIMELINE_LEFT_MARGIN)))
                             current_time = ratio * animation.duration
+                            
+                            # Snap to nearby keyframes
+                            if not (pygame.key.get_mods() & pygame.KMOD_SHIFT):
+                                for k in animation.keyframes:
+                                    if abs(k.time - current_time) < 0.05:
+                                        current_time = k.time
+                                        break
+
                             if not is_playing:
                                 animation.apply(current_time, root_bone)
                             dragging = "TIMELINE"
@@ -430,8 +450,17 @@ def main():
                 if dragging == "BONE" and selected_bone:
                     current_state = get_bone_state(selected_bone)
                     if drag_start_bone_state and current_state != drag_start_bone_state:
+                        # Check for keyframe at current time
+                        target_kf = None
+                        for k in animation.keyframes:
+                            if k.bone_name == selected_bone.name and abs(k.time - current_time) < 0.01:
+                                target_kf = k
+                                break
+                        
                         # Push Undo command for bone transform if state changed
-                        history.push(TransformBoneCommand(selected_bone, drag_start_bone_state, current_state))
+                        command = TransformBoneCommand(selected_bone, drag_start_bone_state, current_state, keyframe=target_kf)
+                        if target_kf: command.execute() # Ensure KF is updated
+                        history.push(command)
                 
                 dragging = False
                 dragging_keyframe = None
@@ -442,7 +471,7 @@ def main():
                 dy = my - last_mouse_pos[1]
                 
                 if dragging == "KEYFRAME" and dragging_keyframe and animation.duration > 0:
-                    ratio = max(0, min(1, mx / SCREEN_WIDTH))
+                    ratio = max(0, min(1, (mx - TIMELINE_LEFT_MARGIN) / (SCREEN_WIDTH - TIMELINE_LEFT_MARGIN)))
                     new_time = ratio * animation.duration
                     
                     # Store previous state for Undo/Redo if we move a keyframe
@@ -457,8 +486,16 @@ def main():
                     animation.keyframes.sort(key=lambda k: k.time)
                 
                 elif dragging == "TIMELINE":
-                    ratio = max(0, min(1, mx / SCREEN_WIDTH))
+                    ratio = max(0, min(1, (mx - TIMELINE_LEFT_MARGIN) / (SCREEN_WIDTH - TIMELINE_LEFT_MARGIN)))
                     current_time = ratio * animation.duration
+                    
+                    # Snap to nearby keyframes
+                    if not (pygame.key.get_mods() & pygame.KMOD_SHIFT): # Hold Shift to disable snapping
+                        for k in animation.keyframes:
+                            if abs(k.time - current_time) < 0.05: # Snap threshold
+                                current_time = k.time
+                                break
+                    
                     if not is_playing:
                         animation.apply(current_time, root_bone)
                 
@@ -631,7 +668,7 @@ def main():
                 screen.blit(name_surf, (5, ky - 5))
                 
                 # Draw bone-colored track bar
-                track_rect = pygame.Rect(60, ky - row_height / 2 + 1, SCREEN_WIDTH - 60, row_height - 2)
+                track_rect = pygame.Rect(TIMELINE_LEFT_MARGIN, ky - row_height / 2 + 1, SCREEN_WIDTH - TIMELINE_LEFT_MARGIN, row_height - 2)
                 # Darker version of bone color for background
                 dark_color = (max(0, b.color[0] - 100), max(0, b.color[1] - 100), max(0, b.color[2] - 100))
                 pygame.draw.rect(screen, dark_color, track_rect, 0) 
@@ -640,7 +677,7 @@ def main():
 
             # Draw keyframes with track spacing and special markers
             for k in animation.keyframes:
-                kx = (k.time / animation.duration) * SCREEN_WIDTH
+                kx = TIMELINE_LEFT_MARGIN + (k.time / animation.duration) * (SCREEN_WIDTH - TIMELINE_LEFT_MARGIN)
                 
                 # Determine Y based on bone track
                 row_idx = bone_row_map.get(k.bone_name, 0)

@@ -19,7 +19,7 @@ def capture_animation_frames(root_bone, animation, camera_pan, fps=30):
         animation.apply(t, root_bone)
         
         # Render without UI selection highlights and without bones
-        render_scene(temp_screen, root_bone, camera_pan, None, "NONE", time_info=None, draw_bones=False)
+        render_scene(temp_screen, root_bone, camera_pan, 1.0, None, "NONE", time_info=None, draw_bones=False)
         
         # Capture - We crop out the timeline at the bottom
         view = pygame.surfarray.array3d(temp_screen)

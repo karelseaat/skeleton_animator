@@ -1,0 +1,243 @@
+[[bones]]
+name = "Hips"
+x = 0.0
+y = 100.0
+rotation = 0.0
+size_x = 1.0
+size_y = 1.0
+pivot_x = 0.0
+pivot_y = 0.0
+alpha = 255.0
+color = [ 255, 255, 255,]
+image = "assets/robot_joint.png"
+
+[[bones]]
+name = "Body"
+x = 0.0
+y = -10.0
+rotation = 0.0
+size_x = 1.0
+size_y = 1.0
+pivot_x = 30.0
+pivot_y = 80.0
+alpha = 255.0
+color = [ 100, 100, 255,]
+parent = "Hips"
+image = "assets/torso.png"
+
+[[bones]]
+name = "Head"
+x = 0.0
+y = -130.0
+rotation = 0.0
+size_x = 0.8
+size_y = 0.8
+pivot_x = 35.0
+pivot_y = 60.0
+alpha = 255.0
+color = [ 255, 200, 150,]
+parent = "Body"
+image = "assets/head.png"
+
+# --- Left Arm ---
+[[bones]]
+name = "UpperArm_L"
+x = -45.0
+y = -110.0
+rotation = 10.0
+size_x = 0.7
+size_y = 0.8
+pivot_x = 15.0
+pivot_y = 10.0
+alpha = 255.0
+color = [ 200, 100, 100,]
+parent = "Body"
+image = "assets/limb.png"
+
+[[bones]]
+name = "LowerArm_L"
+x = 0.0
+y = 80.0
+rotation = -5.0
+size_x = 0.6
+size_y = 0.7
+pivot_x = 15.0
+pivot_y = 10.0
+alpha = 255.0
+color = [ 180, 80, 80,]
+parent = "UpperArm_L"
+image = "assets/limb.png"
+
+# --- Right Arm ---
+[[bones]]
+name = "UpperArm_R"
+x = 45.0
+y = -110.0
+rotation = -10.0
+size_x = 0.7
+size_y = 0.8
+pivot_x = 15.0
+pivot_y = 10.0
+alpha = 255.0
+color = [ 200, 100, 100,]
+parent = "Body"
+image = "assets/limb.png"
+
+[[bones]]
+name = "LowerArm_R"
+x = 0.0
+y = 80.0
+rotation = 5.0
+size_x = 0.6
+size_y = 0.7
+pivot_x = 15.0
+pivot_y = 10.0
+alpha = 255.0
+color = [ 180, 80, 80,]
+parent = "UpperArm_R"
+image = "assets/limb.png"
+
+# --- Left Leg ---
+[[bones]]
+name = "UpperLeg_L"
+x = -25.0
+y = 10.0
+rotation = 0.0
+size_x = 0.8
+size_y = 0.9
+pivot_x = 15.0
+pivot_y = 10.0
+alpha = 255.0
+color = [ 100, 100, 200,]
+parent = "Hips"
+image = "assets/limb.png"
+
+[[bones]]
+name = "LowerLeg_L"
+x = 0.0
+y = 90.0
+rotation = 0.0
+size_x = 0.7
+size_y = 0.8
+pivot_x = 15.0
+pivot_y = 10.0
+alpha = 255.0
+color = [ 80, 80, 180,]
+parent = "UpperLeg_L"
+image = "assets/limb.png"
+
+[[bones]]
+name = "Foot_L"
+x = 0.0
+y = 80.0
+rotation = 0.0
+size_x = 0.5
+size_y = 0.3
+pivot_x = 10.0
+pivot_y = 0.0
+alpha = 255.0
+color = [ 50, 50, 150,]
+parent = "LowerLeg_L"
+image = "assets/robot_claw.png"
+
+# --- Right Leg ---
+[[bones]]
+name = "UpperLeg_R"
+x = 25.0
+y = 10.0
+rotation = 0.0
+size_x = 0.8
+size_y = 0.9
+pivot_x = 15.0
+pivot_y = 10.0
+alpha = 255.0
+color = [ 100, 100, 200,]
+parent = "Hips"
+image = "assets/limb.png"
+
+[[bones]]
+name = "LowerLeg_R"
+x = 0.0
+y = 90.0
+rotation = 0.0
+size_x = 0.7
+size_y = 0.8
+pivot_x = 15.0
+pivot_y = 10.0
+alpha = 255.0
+color = [ 80, 80, 180,]
+parent = "UpperLeg_R"
+image = "assets/limb.png"
+
+[[bones]]
+name = "Foot_R"
+x = 0.0
+y = 80.0
+rotation = 0.0
+size_x = 0.5
+size_y = 0.3
+pivot_x = 10.0
+pivot_y = 0.0
+alpha = 255.0
+color = [ 50, 50, 150,]
+parent = "LowerLeg_R"
+image = "assets/robot_claw.png"
+
+[meta]
+duration = 2.0
+loop = true
+
+[animations]
+[[animations.keyframes]]
+time = 0.0
+# Idle Pose
+[animations.keyframes.bones.Hips]
+y = 100.0
+[animations.keyframes.bones.Body]
+rot = 0.0
+[animations.keyframes.bones.Head]
+rot = 0.0
+[animations.keyframes.bones.UpperArm_L]
+rot = 10.0
+[animations.keyframes.bones.LowerArm_L]
+rot = -5.0
+[animations.keyframes.bones.UpperArm_R]
+rot = -10.0
+[animations.keyframes.bones.LowerArm_R]
+rot = 5.0
+[animations.keyframes.bones.UpperLeg_L]
+rot = 0.0
+[animations.keyframes.bones.LowerLeg_L]
+rot = 0.0
+[animations.keyframes.bones.UpperLeg_R]
+rot = 0.0
+[animations.keyframes.bones.LowerLeg_R]
+rot = 0.0
+
+[[animations.keyframes]]
+time = 1.0
+# Bob Down / Breathe
+[animations.keyframes.bones.Hips]
+y = 110.0
+easing = "in_out_quad"
+[animations.keyframes.bones.Body]
+rot = 0.0
+[animations.keyframes.bones.Head]
+rot = 2.0
+[animations.keyframes.bones.UpperArm_L]
+rot = 15.0
+[animations.keyframes.bones.UpperArm_R]
+rot = -15.0
+
+[[animations.keyframes]]
+time = 2.0
+# Return to Idle
+[animations.keyframes.bones.Hips]
+y = 100.0
+easing = "in_out_quad"
+[animations.keyframes.bones.Head]
+rot = 0.0
+[animations.keyframes.bones.UpperArm_L]
+rot = 10.0
+[animations.keyframes.bones.UpperArm_R]
+rot = -10.0

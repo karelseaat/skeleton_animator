@@ -334,7 +334,7 @@ def get_keyframe_at_pos(animation, mx, my, duration, root_bone):
     base_ky = SCREEN_HEIGHT - TIMELINE_HEIGHT + 25 # Top margin for timeline
     
     for k in animation.keyframes:
-        kx = (k.time / duration) * SCREEN_WIDTH
+        kx = TIMELINE_LEFT_MARGIN + (k.time / duration) * (SCREEN_WIDTH - TIMELINE_LEFT_MARGIN)
         
         # Determine Y based on bone track
         row_idx = bone_row_map.get(k.bone_name, 0)
@@ -352,7 +352,6 @@ def get_keyframe_at_pos(animation, mx, my, duration, root_bone):
             closest_keyframe = k
     
     return closest_keyframe
-
 def render_scene(surface, root_bone, camera_pan, camera_zoom, selected_bone, mode, time_info=None, draw_bones=True, background_image=None):
     """
     Draws the entire scene to the provided surface.
@@ -448,7 +447,8 @@ def render_scene(surface, root_bone, camera_pan, camera_zoom, selected_bone, mod
             
             time_marker = 0
             while time_marker <= dur + 0.01:  # Small epsilon for floating point
-                x = (time_marker / dur) * w
+                # Account for left margin
+                x = TIMELINE_LEFT_MARGIN + (time_marker / dur) * (w - TIMELINE_LEFT_MARGIN)
                 
                 # Major tick (full height)
                 pygame.draw.line(surface, (100, 100, 100), (x, h - TIMELINE_HEIGHT), (x, h - TIMELINE_HEIGHT + 15), 1)
@@ -463,5 +463,5 @@ def render_scene(surface, root_bone, camera_pan, camera_zoom, selected_bone, mod
         
         # Playhead
         if dur > 0:
-            ph_x = (curr / dur) * w
+            ph_x = TIMELINE_LEFT_MARGIN + (curr / dur) * (w - TIMELINE_LEFT_MARGIN)
             pygame.draw.line(surface, (255, 0, 0), (ph_x, h - TIMELINE_HEIGHT), (ph_x, h), 2)
